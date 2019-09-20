@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Adding Loads to Dynamics</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style type="text/css">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header>
+<h1 class="title">Adding Loads to Dynamics</h1>
+</header>
+<p>With the dynamics a bit more organized we want to take a look at a bit more complicated systems. Now we will add some external loads, no actuation yet, for now we will look at both gravity and viscosity. So, we will now have a <span class="math inline">\(\bar{W}\)</span> term to include in the dynamics and we will have to integrate <span class="math inline">\(g\)</span> in the explicit Euler steps as well (left it out previously because it was unnecessary).</p>
+<p>The load for gravity is:</p>
+<p><span class="math display">\[
+\bar{W}_{grav} = \rho A \begin{bmatrix} 0 \\ R^Tg_r \end{bmatrix}
+\]</span> where <span class="math inline">\(g_r\)</span> is the gravitational acceleration vector</p>
+<p>The load for viscosity is:</p>
+<p><span class="math display">\[
+\bar{W}_{vis} = V\dot{\xi}
+\]</span> where <span class="math inline">\(V = \mu*diag([3I, 3I, J, A, A, 3A])\)</span> is the viscosity matrix.</p>
+<p>First lets add in the integration of <span class="math inline">\(g\)</span> in the explicit Euler stepping first.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">def</span> _integrate(<span class="va">self</span>, prev, dt, xi0):</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">        <span class="va">self</span>.xi[<span class="dv">0</span>, :] <span class="op">=</span> xi0</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">        <span class="co"># integration over the body (don&#39;t need the initial point as the initial values are determined already)</span></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">        g_half <span class="op">=</span> np.eye(<span class="dv">4</span>) <span class="co"># known initial condition</span></a>
+<a class="sourceLine" id="cb1-6" data-line-number="6">        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>.N <span class="op">-</span> <span class="dv">1</span>):</a>
+<a class="sourceLine" id="cb1-7" data-line-number="7">            <span class="co"># averaging over steps to get half step values</span></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8">            xi_half <span class="op">=</span> (<span class="va">self</span>.xi[i, :] <span class="op">+</span> prev.xi[i, :]) <span class="op">/</span> <span class="dv">2</span></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9">            eta_half <span class="op">=</span> (<span class="va">self</span>.eta[i, :] <span class="op">+</span> prev.eta[i, :]) <span class="op">/</span> <span class="dv">2</span></a>
+<a class="sourceLine" id="cb1-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb1-11" data-line-number="11">            <span class="co"># implicit midpoint approximation</span></a>
+<a class="sourceLine" id="cb1-12" data-line-number="12">            xi_dot <span class="op">=</span> (<span class="va">self</span>.xi[i, :] <span class="op">-</span> prev.xi[i, :]) <span class="op">/</span> dt</a>
+<a class="sourceLine" id="cb1-13" data-line-number="13">            eta_dot <span class="op">=</span> (<span class="va">self</span>.eta[i, :] <span class="op">-</span> prev.eta[i, :]) <span class="op">/</span> dt</a>
+<a class="sourceLine" id="cb1-14" data-line-number="14"></a>
+<a class="sourceLine" id="cb1-15" data-line-number="15">            <span class="co"># spatial derivatives</span></a>
+<a class="sourceLine" id="cb1-16" data-line-number="16">            xi_der <span class="op">=</span> np.linalg.inv(<span class="va">self</span>.K) <span class="op">@</span> (</a>
+<a class="sourceLine" id="cb1-17" data-line-number="17">                    (<span class="va">self</span>.M <span class="op">@</span> eta_dot) <span class="op">-</span> (adjoint(eta_half).T <span class="op">@</span> <span class="va">self</span>.M <span class="op">@</span> eta_half) <span class="op">+</span> (</a>
+<a class="sourceLine" id="cb1-18" data-line-number="18">                        adjoint(xi_half).T <span class="op">@</span> <span class="va">self</span>.K <span class="op">@</span> (xi_half <span class="op">-</span> <span class="va">self</span>.xi_ref)))</a>
+<a class="sourceLine" id="cb1-19" data-line-number="19">            eta_der <span class="op">=</span> xi_dot <span class="op">-</span> (adjoint(xi_half) <span class="op">@</span> eta_half)</a>
+<a class="sourceLine" id="cb1-20" data-line-number="20"></a>
+<a class="sourceLine" id="cb1-21" data-line-number="21">            <span class="co"># explicit Euler step</span></a>
+<a class="sourceLine" id="cb1-22" data-line-number="22">            xi_half_next <span class="op">=</span> xi_half <span class="op">+</span> <span class="va">self</span>.ds <span class="op">*</span> xi_der</a>
+<a class="sourceLine" id="cb1-23" data-line-number="23">            eta_half_next <span class="op">=</span> eta_half <span class="op">+</span> <span class="va">self</span>.ds <span class="op">*</span> eta_der</a>
+<a class="sourceLine" id="cb1-24" data-line-number="24">            g_half <span class="op">=</span> g_half <span class="op">@</span> expm(se(<span class="va">self</span>.ds <span class="op">*</span> xi_half))</a>
+<a class="sourceLine" id="cb1-25" data-line-number="25"></a>
+<a class="sourceLine" id="cb1-26" data-line-number="26">            <span class="co"># determine next step from half step value</span></a>
+<a class="sourceLine" id="cb1-27" data-line-number="27">            <span class="va">self</span>.xi[i <span class="op">+</span> <span class="dv">1</span>, :] <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> xi_half_next <span class="op">-</span> prev.xi[i <span class="op">+</span> <span class="dv">1</span>, :]</a>
+<a class="sourceLine" id="cb1-28" data-line-number="28">            <span class="va">self</span>.eta[i <span class="op">+</span> <span class="dv">1</span>, :] <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> eta_half_next <span class="op">-</span> prev.eta[i <span class="op">+</span> <span class="dv">1</span>, :]</a>
+<a class="sourceLine" id="cb1-29" data-line-number="29"></a>
+<a class="sourceLine" id="cb1-30" data-line-number="30">        <span class="co"># midpoint RKMK to step the g values</span></a>
+<a class="sourceLine" id="cb1-31" data-line-number="31">        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>.N):</a>
+<a class="sourceLine" id="cb1-32" data-line-number="32">            <span class="va">self</span>.g[i, :] <span class="op">=</span> flatten(unflatten(prev.g[i, :]) <span class="op">@</span> expm(se(dt <span class="op">*</span> (<span class="va">self</span>.eta[i, :] <span class="op">+</span> prev.eta[i, :]) <span class="op">/</span> <span class="dv">2</span>)))</a></code></pre></div>
+<p>This is simply done by initializing the base value for <span class="math inline">\(g\)</span> and then stepping it with each iteration.</p>
+<p>Now to implement gravity and viscosity. Viscosity fits as a material property so we can extend the initialization to include it, but I think that gravity doesn’t quite fit so it will be hardcoded for now and then looked at some abstraction later.</p>
+<p>Adding viscosity to the construction is simple:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co"># add mu as an argument</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="va">self</span>.V <span class="op">=</span> mu <span class="op">*</span> np.diag([<span class="dv">3</span><span class="op">*</span>I,<span class="dv">3</span><span class="op">*</span>I,J,A,A,<span class="dv">3</span><span class="op">*</span>A])</a></code></pre></div>
+<p>Now adding to the loads:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="kw">def</span> _integrate(<span class="va">self</span>, prev, dt, xi0):</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">        <span class="va">self</span>.xi[<span class="dv">0</span>, :] <span class="op">=</span> xi0</a>
+<a class="sourceLine" id="cb3-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb3-4" data-line-number="4">        <span class="co"># integration over the body (don&#39;t need the initial point as the initial values are determined already)</span></a>
+<a class="sourceLine" id="cb3-5" data-line-number="5">        g_half <span class="op">=</span> np.eye(<span class="dv">4</span>) <span class="co"># known initial condition</span></a>
+<a class="sourceLine" id="cb3-6" data-line-number="6">        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>.N <span class="op">-</span> <span class="dv">1</span>):</a>
+<a class="sourceLine" id="cb3-7" data-line-number="7">            <span class="co"># averaging over steps to get half step values</span></a>
+<a class="sourceLine" id="cb3-8" data-line-number="8">            xi_half <span class="op">=</span> (<span class="va">self</span>.xi[i, :] <span class="op">+</span> prev.xi[i, :]) <span class="op">/</span> <span class="dv">2</span></a>
+<a class="sourceLine" id="cb3-9" data-line-number="9">            eta_half <span class="op">=</span> (<span class="va">self</span>.eta[i, :] <span class="op">+</span> prev.eta[i, :]) <span class="op">/</span> <span class="dv">2</span></a>
+<a class="sourceLine" id="cb3-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb3-11" data-line-number="11">            <span class="co"># implicit midpoint approximation</span></a>
+<a class="sourceLine" id="cb3-12" data-line-number="12">            xi_dot <span class="op">=</span> (<span class="va">self</span>.xi[i, :] <span class="op">-</span> prev.xi[i, :]) <span class="op">/</span> dt</a>
+<a class="sourceLine" id="cb3-13" data-line-number="13">            eta_dot <span class="op">=</span> (<span class="va">self</span>.eta[i, :] <span class="op">-</span> prev.eta[i, :]) <span class="op">/</span> dt</a>
+<a class="sourceLine" id="cb3-14" data-line-number="14"></a>
+<a class="sourceLine" id="cb3-15" data-line-number="15">            <span class="co"># external loads</span></a>
+<a class="sourceLine" id="cb3-16" data-line-number="16">            W_bar <span class="op">=</span> <span class="dv">0</span></a>
+<a class="sourceLine" id="cb3-17" data-line-number="17">            W_bar <span class="op">+=</span> <span class="va">self</span>.V <span class="op">@</span> xi_dot</a>
+<a class="sourceLine" id="cb3-18" data-line-number="18"></a>
+<a class="sourceLine" id="cb3-19" data-line-number="19">            <span class="co"># spatial derivatives</span></a>
+<a class="sourceLine" id="cb3-20" data-line-number="20">            xi_der <span class="op">=</span> np.linalg.inv(<span class="va">self</span>.K) <span class="op">@</span> (</a>
+<a class="sourceLine" id="cb3-21" data-line-number="21">                    (<span class="va">self</span>.M <span class="op">@</span> eta_dot) <span class="op">-</span> (adjoint(eta_half).T <span class="op">@</span> <span class="va">self</span>.M <span class="op">@</span> eta_half) <span class="op">+</span> (</a>
+<a class="sourceLine" id="cb3-22" data-line-number="22">                        adjoint(xi_half).T <span class="op">@</span> <span class="va">self</span>.K <span class="op">@</span> (xi_half <span class="op">-</span> <span class="va">self</span>.xi_ref)) <span class="op">+</span> W_bar)</a>
+<a class="sourceLine" id="cb3-23" data-line-number="23">            eta_der <span class="op">=</span> xi_dot <span class="op">-</span> (adjoint(xi_half) <span class="op">@</span> eta_half)</a>
+<a class="sourceLine" id="cb3-24" data-line-number="24"></a>
+<a class="sourceLine" id="cb3-25" data-line-number="25">            <span class="co"># explicit Euler step</span></a>
+<a class="sourceLine" id="cb3-26" data-line-number="26">            xi_half_next <span class="op">=</span> xi_half <span class="op">+</span> <span class="va">self</span>.ds <span class="op">*</span> xi_der</a>
+<a class="sourceLine" id="cb3-27" data-line-number="27">            eta_half_next <span class="op">=</span> eta_half <span class="op">+</span> <span class="va">self</span>.ds <span class="op">*</span> eta_der</a>
+<a class="sourceLine" id="cb3-28" data-line-number="28">            g_half <span class="op">=</span> g_half <span class="op">@</span> expm(se(<span class="va">self</span>.ds <span class="op">*</span> xi_half))</a>
+<a class="sourceLine" id="cb3-29" data-line-number="29"></a>
+<a class="sourceLine" id="cb3-30" data-line-number="30">            <span class="co"># determine next step from half step value</span></a>
+<a class="sourceLine" id="cb3-31" data-line-number="31">            <span class="va">self</span>.xi[i <span class="op">+</span> <span class="dv">1</span>, :] <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> xi_half_next <span class="op">-</span> prev.xi[i <span class="op">+</span> <span class="dv">1</span>, :]</a>
+<a class="sourceLine" id="cb3-32" data-line-number="32">            <span class="va">self</span>.eta[i <span class="op">+</span> <span class="dv">1</span>, :] <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> eta_half_next <span class="op">-</span> prev.eta[i <span class="op">+</span> <span class="dv">1</span>, :]</a>
+<a class="sourceLine" id="cb3-33" data-line-number="33"></a>
+<a class="sourceLine" id="cb3-34" data-line-number="34">        <span class="co"># midpoint RKMK to step the g values</span></a>
+<a class="sourceLine" id="cb3-35" data-line-number="35">        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>.N):</a>
+<a class="sourceLine" id="cb3-36" data-line-number="36">            <span class="va">self</span>.g[i, :] <span class="op">=</span> flatten(unflatten(prev.g[i, :]) <span class="op">@</span> expm(se(dt <span class="op">*</span> (<span class="va">self</span>.eta[i, :] <span class="op">+</span> prev.eta[i, :]) <span class="op">/</span> <span class="dv">2</span>)))</a></code></pre></div>
+<p>Now we have the <code>W_bar</code> term. To test to see if this works as expected if we include some viscosity into the system and we use the previous conservative test setup we should see the energy gradually dissipate. For <code>mu=300</code>:</p>
+<p><img src="visc_energy.png" title="Energy trace" /></p>
+<p>Then using a larger viscosity it should dissipate energy faster. For <code>mu=30000</code>:</p>
+<p><img src="large_visc_energy.png" title="Energy trace" /></p>
+<p>Now for gravity we can simply add it to the <code>W_bar</code> term (keeping gravitational acceleration hardcoded for now):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">def</span> _integrate(<span class="va">self</span>, prev, dt, xi0):</a>
+<a class="sourceLine" id="cb4-2" data-line-number="2">        <span class="va">self</span>.xi[<span class="dv">0</span>, :] <span class="op">=</span> xi0</a>
+<a class="sourceLine" id="cb4-3" data-line-number="3">        grav <span class="op">=</span> np.array([<span class="op">-</span><span class="fl">9.81</span>,<span class="dv">0</span>,<span class="dv">0</span>])</a>
+<a class="sourceLine" id="cb4-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb4-5" data-line-number="5">        <span class="co"># integration over the body (don&#39;t need the initial point as the initial values are determined already)</span></a>
+<a class="sourceLine" id="cb4-6" data-line-number="6">        g_half <span class="op">=</span> np.eye(<span class="dv">4</span>) <span class="co"># known initial condition</span></a>
+<a class="sourceLine" id="cb4-7" data-line-number="7">        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>.N <span class="op">-</span> <span class="dv">1</span>):</a>
+<a class="sourceLine" id="cb4-8" data-line-number="8">            <span class="co"># averaging over steps to get half step values</span></a>
+<a class="sourceLine" id="cb4-9" data-line-number="9">            xi_half <span class="op">=</span> (<span class="va">self</span>.xi[i, :] <span class="op">+</span> prev.xi[i, :]) <span class="op">/</span> <span class="dv">2</span></a>
+<a class="sourceLine" id="cb4-10" data-line-number="10">            eta_half <span class="op">=</span> (<span class="va">self</span>.eta[i, :] <span class="op">+</span> prev.eta[i, :]) <span class="op">/</span> <span class="dv">2</span></a>
+<a class="sourceLine" id="cb4-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb4-12" data-line-number="12">            <span class="co"># implicit midpoint approximation</span></a>
+<a class="sourceLine" id="cb4-13" data-line-number="13">            xi_dot <span class="op">=</span> (<span class="va">self</span>.xi[i, :] <span class="op">-</span> prev.xi[i, :]) <span class="op">/</span> dt</a>
+<a class="sourceLine" id="cb4-14" data-line-number="14">            eta_dot <span class="op">=</span> (<span class="va">self</span>.eta[i, :] <span class="op">-</span> prev.eta[i, :]) <span class="op">/</span> dt</a>
+<a class="sourceLine" id="cb4-15" data-line-number="15"></a>
+<a class="sourceLine" id="cb4-16" data-line-number="16">            <span class="co"># external loads</span></a>
+<a class="sourceLine" id="cb4-17" data-line-number="17">            W_bar <span class="op">=</span> <span class="dv">0</span></a>
+<a class="sourceLine" id="cb4-18" data-line-number="18">            W_bar <span class="op">+=</span> <span class="va">self</span>.V <span class="op">@</span> xi_dot</a>
+<a class="sourceLine" id="cb4-19" data-line-number="19">            R <span class="op">=</span> g_half[:<span class="dv">3</span>,:<span class="dv">3</span>]</a>
+<a class="sourceLine" id="cb4-20" data-line-number="20">            W_bar <span class="op">+=</span> <span class="va">self</span>.rho <span class="op">*</span><span class="va">self</span>.A <span class="op">*</span> np.concatenate([np.array([<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>]), R.T <span class="op">@</span> grav])</a>
+<a class="sourceLine" id="cb4-21" data-line-number="21"></a>
+<a class="sourceLine" id="cb4-22" data-line-number="22">            <span class="co"># spatial derivatives</span></a>
+<a class="sourceLine" id="cb4-23" data-line-number="23">            xi_der <span class="op">=</span> np.linalg.inv(<span class="va">self</span>.K) <span class="op">@</span> (</a>
+<a class="sourceLine" id="cb4-24" data-line-number="24">                    (<span class="va">self</span>.M <span class="op">@</span> eta_dot) <span class="op">-</span> (adjoint(eta_half).T <span class="op">@</span> <span class="va">self</span>.M <span class="op">@</span> eta_half) <span class="op">+</span> (</a>
+<a class="sourceLine" id="cb4-25" data-line-number="25">                        adjoint(xi_half).T <span class="op">@</span> <span class="va">self</span>.K <span class="op">@</span> (xi_half <span class="op">-</span> <span class="va">self</span>.xi_ref)) <span class="op">+</span> W_bar)</a>
+<a class="sourceLine" id="cb4-26" data-line-number="26">            eta_der <span class="op">=</span> xi_dot <span class="op">-</span> (adjoint(xi_half) <span class="op">@</span> eta_half)</a>
+<a class="sourceLine" id="cb4-27" data-line-number="27"></a>
+<a class="sourceLine" id="cb4-28" data-line-number="28">            <span class="co"># explicit Euler step</span></a>
+<a class="sourceLine" id="cb4-29" data-line-number="29">            xi_half_next <span class="op">=</span> xi_half <span class="op">+</span> <span class="va">self</span>.ds <span class="op">*</span> xi_der</a>
+<a class="sourceLine" id="cb4-30" data-line-number="30">            eta_half_next <span class="op">=</span> eta_half <span class="op">+</span> <span class="va">self</span>.ds <span class="op">*</span> eta_der</a>
+<a class="sourceLine" id="cb4-31" data-line-number="31">            g_half <span class="op">=</span> g_half <span class="op">@</span> expm(se(<span class="va">self</span>.ds <span class="op">*</span> xi_half))</a>
+<a class="sourceLine" id="cb4-32" data-line-number="32"></a>
+<a class="sourceLine" id="cb4-33" data-line-number="33">            <span class="co"># determine next step from half step value</span></a>
+<a class="sourceLine" id="cb4-34" data-line-number="34">            <span class="va">self</span>.xi[i <span class="op">+</span> <span class="dv">1</span>, :] <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> xi_half_next <span class="op">-</span> prev.xi[i <span class="op">+</span> <span class="dv">1</span>, :]</a>
+<a class="sourceLine" id="cb4-35" data-line-number="35">            <span class="va">self</span>.eta[i <span class="op">+</span> <span class="dv">1</span>, :] <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> eta_half_next <span class="op">-</span> prev.eta[i <span class="op">+</span> <span class="dv">1</span>, :]</a>
+<a class="sourceLine" id="cb4-36" data-line-number="36"></a>
+<a class="sourceLine" id="cb4-37" data-line-number="37">        <span class="co"># midpoint RKMK to step the g values</span></a>
+<a class="sourceLine" id="cb4-38" data-line-number="38">        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>.N):</a>
+<a class="sourceLine" id="cb4-39" data-line-number="39">            <span class="va">self</span>.g[i, :] <span class="op">=</span> flatten(unflatten(prev.g[i, :]) <span class="op">@</span> expm(se(dt <span class="op">*</span> (<span class="va">self</span>.eta[i, :] <span class="op">+</span> prev.eta[i, :]) <span class="op">/</span> <span class="dv">2</span>)))</a></code></pre></div>
+<p>To test to see if this makes sense we can have the rod act as a cantilever beam and track the tip position through time from an initially straight configuration. If we include viscosity it should start converging towards steady state, if viscosity is not included it should vibrate forever.</p>
+<p>Without viscosity:</p>
+<p><img src="cantilever.png" title="Cantilever tip response" /></p>
+<p>With viscosity:</p>
+<p><img src="visc_cantilever.png" title="Cantilever tip response" /></p>
+<p>While this confirms our expectations it’d be nice to compute the total energy in the system considering gravity is a conservative force. So we will have to include gravity into the energy computation to see if it is conserved numerically. To do this we still have the same kinetic and strain energy parts and for gravity we integrate along the rod with <span class="math inline">\(\Delta s \rho A x g\)</span> where <span class="math inline">\(x\)</span> is the x position of the cross section and <span class="math inline">\(g\)</span> is the gravitational acceleration. So, with no viscosity we expect the energy to still be conserved.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="kw">def</span> grav_energy(sys):</a>
+<a class="sourceLine" id="cb5-2" data-line-number="2">    H <span class="op">=</span> sys.energy()</a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(sys.N):</a>
+<a class="sourceLine" id="cb5-4" data-line-number="4">        H <span class="op">+=</span> <span class="op">-</span>sys.ds<span class="op">*</span>sys.rho<span class="op">*</span>sys.A<span class="op">*</span>sys.g[i,<span class="dv">9</span>]<span class="op">*</span><span class="fl">9.81</span> <span class="co"># negative sign because it drops below the original height</span></a>
+<a class="sourceLine" id="cb5-5" data-line-number="5">    <span class="cf">return</span> H</a></code></pre></div>
+<p>The resulting energy oscillates slightly about 0 energy.</p>
+<p><img src="grav_energy.png" title="Energy with gravity" /></p>
+<p>Then including viscosity as well we see the energy dissipates:</p>
+<p><img src="visc_grav_energy.png" title="Energy with gravity and viscosity" /></p>
+<p>Here we saw the addition of gravity and viscosity into the system and see that symplecticity is still maintained with the right parameters.</p>
+</body>
+</html>

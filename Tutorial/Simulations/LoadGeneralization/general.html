@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Generalizing the Loads</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <style type="text/css">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header>
+<h1 class="title">Generalizing the Loads</h1>
+</header>
+<p>For working with the rods the main determinant of the behavior are the present external loads, but having to define and redefine them over and over could get tedious especially when they get mixed and matched. This leads to wanting to generalize the loads a bit so they can be easily swapped in and out for the simulations. The loads we have considered so far are gravity, viscosity, and cable actuators and they influence the tip load for the boundary condition and generate <span class="math inline">\(\bar{A}\)</span> and <span class="math inline">\(\bar{B}\)</span> for the distributed load. So, a load should implement how to compute their distributed load and their tip load and any internal information they need. I’m going to make an execpetion for viscosity as it is a material property so I’m leaving it in the rod definition. The resulting abstract class for loads is:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="im">from</span> abc <span class="im">import</span> ABCMeta, abstractmethod</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="kw">class</span> Load(metaclass<span class="op">=</span>ABCMeta):</a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">    <span class="co">&quot;&quot;&quot;</span></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5"><span class="co">    The general class for dealing with loads</span></a>
+<a class="sourceLine" id="cb1-6" data-line-number="6"><span class="co">    need to implement distributed load that gives both A_bar and B_bar</span></a>
+<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="co">    need to implement tip load</span></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8"><span class="co">    takes current g, xi, eta, rod properties, and inputs</span></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9"><span class="co">    &quot;&quot;&quot;</span></a>
+<a class="sourceLine" id="cb1-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb1-11" data-line-number="11">    <span class="at">@abstractmethod</span></a>
+<a class="sourceLine" id="cb1-12" data-line-number="12">    <span class="kw">def</span> dist_load(<span class="va">self</span>, g, xi, eta, xi_dot, eta_dot, rod, q):</a>
+<a class="sourceLine" id="cb1-13" data-line-number="13">        <span class="cf">return</span> <span class="dv">0</span>, <span class="dv">0</span> <span class="co"># if no distributed load</span></a>
+<a class="sourceLine" id="cb1-14" data-line-number="14"></a>
+<a class="sourceLine" id="cb1-15" data-line-number="15">    <span class="at">@abstractmethod</span></a>
+<a class="sourceLine" id="cb1-16" data-line-number="16">    <span class="kw">def</span> tip_load(<span class="va">self</span>, g, xi, eta, xi_dot, eta_dot, rod, q):</a>
+<a class="sourceLine" id="cb1-17" data-line-number="17">        <span class="cf">return</span> <span class="dv">0</span> <span class="co"># no tip load</span></a></code></pre></div>
+<p>Where the methods default to returning 0 to indicate no influence. So, to implement the defintions for gravity and cable loads we have:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw">class</span> Gravity(Load):</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">    <span class="co">&quot;&quot;&quot;</span></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="co">    Gravity load</span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="co">    &quot;&quot;&quot;</span></a>
+<a class="sourceLine" id="cb2-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb2-6" data-line-number="6">    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, grav):</a>
+<a class="sourceLine" id="cb2-7" data-line-number="7">        <span class="va">self</span>.grav <span class="op">=</span> grav  <span class="co"># acceleration vector</span></a>
+<a class="sourceLine" id="cb2-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb2-9" data-line-number="9">    <span class="kw">def</span> dist_load(<span class="va">self</span>, g, xi, eta, xi_dot, eta_dot, rod, q):</a>
+<a class="sourceLine" id="cb2-10" data-line-number="10">        R <span class="op">=</span> g[:<span class="dv">3</span>, :<span class="dv">3</span>]</a>
+<a class="sourceLine" id="cb2-11" data-line-number="11">        A_bar <span class="op">=</span> <span class="dv">0</span></a>
+<a class="sourceLine" id="cb2-12" data-line-number="12">        B_bar <span class="op">=</span> rod.rho <span class="op">*</span> rod.A <span class="op">*</span> np.concatenate([np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>]), R.T <span class="op">@</span> <span class="va">self</span>.grav])</a>
+<a class="sourceLine" id="cb2-13" data-line-number="13"></a>
+<a class="sourceLine" id="cb2-14" data-line-number="14">        <span class="cf">return</span> (A_bar, B_bar)</a>
+<a class="sourceLine" id="cb2-15" data-line-number="15"></a>
+<a class="sourceLine" id="cb2-16" data-line-number="16">    <span class="kw">def</span> tip_load(<span class="va">self</span>, g, xi, eta, xi_dot, eta_dot, rod, q):</a>
+<a class="sourceLine" id="cb2-17" data-line-number="17">        <span class="cf">return</span> <span class="dv">0</span></a>
+<a class="sourceLine" id="cb2-18" data-line-number="18"></a>
+<a class="sourceLine" id="cb2-19" data-line-number="19"></a>
+<a class="sourceLine" id="cb2-20" data-line-number="20"><span class="kw">class</span> Cables(Load):</a>
+<a class="sourceLine" id="cb2-21" data-line-number="21">    <span class="co">&quot;&quot;&quot;</span></a>
+<a class="sourceLine" id="cb2-22" data-line-number="22"><span class="co">    Cables load</span></a>
+<a class="sourceLine" id="cb2-23" data-line-number="23"><span class="co">    &quot;&quot;&quot;</span></a>
+<a class="sourceLine" id="cb2-24" data-line-number="24"></a>
+<a class="sourceLine" id="cb2-25" data-line-number="25">    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, r, N):</a>
+<a class="sourceLine" id="cb2-26" data-line-number="26">        <span class="va">self</span>.r <span class="op">=</span> r  <span class="co"># displacements</span></a>
+<a class="sourceLine" id="cb2-27" data-line-number="27">        <span class="va">self</span>.N <span class="op">=</span> N  <span class="co"># number of actuators</span></a>
+<a class="sourceLine" id="cb2-28" data-line-number="28"></a>
+<a class="sourceLine" id="cb2-29" data-line-number="29">    <span class="kw">def</span> dist_load(<span class="va">self</span>, g, xi, eta, xi_dot, eta_dot, rod, q):</a>
+<a class="sourceLine" id="cb2-30" data-line-number="30">        omega <span class="op">=</span> xi[:<span class="dv">3</span>]</a>
+<a class="sourceLine" id="cb2-31" data-line-number="31">        nu <span class="op">=</span> xi[<span class="dv">3</span>:]</a>
+<a class="sourceLine" id="cb2-32" data-line-number="32">        R <span class="op">=</span> g[:<span class="dv">3</span>, :<span class="dv">3</span>]</a>
+<a class="sourceLine" id="cb2-33" data-line-number="33">        A_bar <span class="op">=</span> <span class="dv">0</span></a>
+<a class="sourceLine" id="cb2-34" data-line-number="34">        B_bar <span class="op">=</span> <span class="dv">0</span></a>
+<a class="sourceLine" id="cb2-35" data-line-number="35">        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>.N):</a>
+<a class="sourceLine" id="cb2-36" data-line-number="36">            r_i <span class="op">=</span> <span class="va">self</span>.r(i)</a>
+<a class="sourceLine" id="cb2-37" data-line-number="37">            pa_der <span class="op">=</span> R <span class="op">@</span> (nu <span class="op">-</span> skew(r_i) <span class="op">@</span> omega)</a>
+<a class="sourceLine" id="cb2-38" data-line-number="38">            P <span class="op">=</span> R.T <span class="op">@</span> <span class="op">-</span>skew(pa_der) <span class="op">*</span> skew(pa_der) <span class="op">/</span> np.linalg.norm(pa_der) <span class="op">**</span> <span class="dv">3</span> <span class="op">@</span> R</a>
+<a class="sourceLine" id="cb2-39" data-line-number="39">            b <span class="op">=</span> P <span class="op">@</span> skew(omega) <span class="op">@</span> (nu <span class="op">-</span> skew(r_i) <span class="op">@</span> omega)</a>
+<a class="sourceLine" id="cb2-40" data-line-number="40">            B_bar <span class="op">+=</span> q[j] <span class="op">*</span> np.concatenate([skew(r_i) <span class="op">@</span> b, b])</a>
+<a class="sourceLine" id="cb2-41" data-line-number="41">            A_bar <span class="op">+=</span> q[j] <span class="op">*</span> np.concatenate([np.concatenate([<span class="op">-</span>skew(r_i) <span class="op">@</span> P <span class="op">@</span> skew(r_i), skew(r_i) <span class="op">@</span> P], <span class="dv">1</span>),</a>
+<a class="sourceLine" id="cb2-42" data-line-number="42">                                            np.concatenate([<span class="op">-</span>P <span class="op">@</span> skew(r_i), P], <span class="dv">1</span>)])</a>
+<a class="sourceLine" id="cb2-43" data-line-number="43"></a>
+<a class="sourceLine" id="cb2-44" data-line-number="44">        <span class="cf">return</span> A_bar, B_bar</a>
+<a class="sourceLine" id="cb2-45" data-line-number="45"></a>
+<a class="sourceLine" id="cb2-46" data-line-number="46">    <span class="kw">def</span> tip_load(<span class="va">self</span>, g, xi, eta, xi_dot, eta_dot, rod, q):</a>
+<a class="sourceLine" id="cb2-47" data-line-number="47">        W <span class="op">=</span> <span class="dv">0</span></a>
+<a class="sourceLine" id="cb2-48" data-line-number="48">        z <span class="op">=</span> np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>])</a>
+<a class="sourceLine" id="cb2-49" data-line-number="49">        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>.N):</a>
+<a class="sourceLine" id="cb2-50" data-line-number="50">            W <span class="op">+=</span> q[i] <span class="op">*</span> np.concatenate([<span class="op">-</span>skew(<span class="va">self</span>.r(i)) <span class="op">@</span> z, z])</a>
+<a class="sourceLine" id="cb2-51" data-line-number="51">        <span class="cf">return</span> W</a></code></pre></div>
+<p>Now to implement the changes to the rod we just include a list of the loads we want to use in the simulation and iterate over them in the appropriate spots.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="kw">class</span> Rod():</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">    <span class="co">&quot;&quot;&quot;</span></a>
+<a class="sourceLine" id="cb3-3" data-line-number="3"><span class="co">    Rod stores the material properties and geometric properties of the cylindrical rod</span></a>
+<a class="sourceLine" id="cb3-4" data-line-number="4"><span class="co">    Need to specify:</span></a>
+<a class="sourceLine" id="cb3-5" data-line-number="5"><span class="co">        D: diameter</span></a>
+<a class="sourceLine" id="cb3-6" data-line-number="6"><span class="co">        L: length</span></a>
+<a class="sourceLine" id="cb3-7" data-line-number="7"><span class="co">        E: Young&#39;s Modulus</span></a>
+<a class="sourceLine" id="cb3-8" data-line-number="8"><span class="co">        rho: density</span></a>
+<a class="sourceLine" id="cb3-9" data-line-number="9"><span class="co">        mu: shear viscosity</span></a>
+<a class="sourceLine" id="cb3-10" data-line-number="10"><span class="co">        N: number of discretizations</span></a>
+<a class="sourceLine" id="cb3-11" data-line-number="11"><span class="co">        xi_init: function of s that specifies the initial value of xi (defaults to straight)</span></a>
+<a class="sourceLine" id="cb3-12" data-line-number="12"><span class="co">        eta_init: function os s that specifies the initial value of eta (defaults to stationary)</span></a>
+<a class="sourceLine" id="cb3-13" data-line-number="13"><span class="co">        loads: list of Loads to use in the simulation</span></a>
+<a class="sourceLine" id="cb3-14" data-line-number="14"><span class="co">    &quot;&quot;&quot;</span></a>
+<a class="sourceLine" id="cb3-15" data-line-number="15"></a>
+<a class="sourceLine" id="cb3-16" data-line-number="16">    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, D, L, E, rho, mu, N, xi_init<span class="op">=</span><span class="kw">lambda</span> s: np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>]),</a>
+<a class="sourceLine" id="cb3-17" data-line-number="17">                 eta_init<span class="op">=</span><span class="kw">lambda</span> s: np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>]), loads<span class="op">=</span>[]):</a>
+<a class="sourceLine" id="cb3-18" data-line-number="18">        <span class="co"># setup properties</span></a>
+<a class="sourceLine" id="cb3-19" data-line-number="19">        A <span class="op">=</span> np.pi <span class="op">/</span> <span class="dv">4</span> <span class="op">*</span> D <span class="op">**</span> <span class="dv">2</span></a>
+<a class="sourceLine" id="cb3-20" data-line-number="20">        I <span class="op">=</span> np.pi <span class="op">/</span> <span class="dv">64</span> <span class="op">*</span> D <span class="op">**</span> <span class="dv">4</span></a>
+<a class="sourceLine" id="cb3-21" data-line-number="21">        J <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> I</a>
+<a class="sourceLine" id="cb3-22" data-line-number="22">        G <span class="op">=</span> E <span class="op">/</span> <span class="dv">3</span>  <span class="co"># assuming incompressible material</span></a>
+<a class="sourceLine" id="cb3-23" data-line-number="23"></a>
+<a class="sourceLine" id="cb3-24" data-line-number="24">        <span class="co"># store values important to simulation</span></a>
+<a class="sourceLine" id="cb3-25" data-line-number="25">        <span class="va">self</span>.K <span class="op">=</span> np.diag([E <span class="op">*</span> I, E <span class="op">*</span> I, G <span class="op">*</span> J, G <span class="op">*</span> A, G <span class="op">*</span> A, E <span class="op">*</span> A])</a>
+<a class="sourceLine" id="cb3-26" data-line-number="26">        <span class="va">self</span>.M <span class="op">=</span> rho <span class="op">*</span> np.diag([I, I, J, A, A, A])</a>
+<a class="sourceLine" id="cb3-27" data-line-number="27">        <span class="va">self</span>.V <span class="op">=</span> mu <span class="op">*</span> np.diag([<span class="dv">3</span> <span class="op">*</span> I, <span class="dv">3</span> <span class="op">*</span> I, J, A, A, <span class="dv">3</span> <span class="op">*</span> A])</a>
+<a class="sourceLine" id="cb3-28" data-line-number="28">        <span class="va">self</span>.L <span class="op">=</span> L</a>
+<a class="sourceLine" id="cb3-29" data-line-number="29">        <span class="va">self</span>.D <span class="op">=</span> D</a>
+<a class="sourceLine" id="cb3-30" data-line-number="30">        <span class="va">self</span>.rho <span class="op">=</span> rho</a>
+<a class="sourceLine" id="cb3-31" data-line-number="31">        <span class="va">self</span>.A <span class="op">=</span> A</a>
+<a class="sourceLine" id="cb3-32" data-line-number="32">        <span class="va">self</span>.xi_ref <span class="op">=</span> np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>])</a>
+<a class="sourceLine" id="cb3-33" data-line-number="33">        <span class="va">self</span>.ds <span class="op">=</span> L <span class="op">/</span> (N <span class="op">-</span> <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb3-34" data-line-number="34">        <span class="va">self</span>.N <span class="op">=</span> N</a>
+<a class="sourceLine" id="cb3-35" data-line-number="35">        <span class="va">self</span>.xi_init <span class="op">=</span> xi_init</a>
+<a class="sourceLine" id="cb3-36" data-line-number="36">        <span class="va">self</span>.eta_init <span class="op">=</span> eta_init</a>
+<a class="sourceLine" id="cb3-37" data-line-number="37"></a>
+<a class="sourceLine" id="cb3-38" data-line-number="38">        <span class="co"># initialize state</span></a>
+<a class="sourceLine" id="cb3-39" data-line-number="39">        <span class="va">self</span>.g <span class="op">=</span> <span class="va">None</span></a>
+<a class="sourceLine" id="cb3-40" data-line-number="40">        <span class="va">self</span>.xi <span class="op">=</span> <span class="va">None</span></a>
+<a class="sourceLine" id="cb3-41" data-line-number="41">        <span class="va">self</span>.eta <span class="op">=</span> <span class="va">None</span></a>
+<a class="sourceLine" id="cb3-42" data-line-number="42">        <span class="va">self</span>._initRod()</a>
+<a class="sourceLine" id="cb3-43" data-line-number="43"></a>
+<a class="sourceLine" id="cb3-44" data-line-number="44">        <span class="co"># the different kinds of loads, viscosity always assumed to occur</span></a>
+<a class="sourceLine" id="cb3-45" data-line-number="45">        <span class="va">self</span>.loads <span class="op">=</span> loads</a>
+<a class="sourceLine" id="cb3-46" data-line-number="46"></a>
+<a class="sourceLine" id="cb3-47" data-line-number="47">    <span class="kw">def</span> _initRod(<span class="va">self</span>):</a>
+<a class="sourceLine" id="cb3-48" data-line-number="48">        <span class="co"># setup g, xi, and eta for the initial configuration</span></a>
+<a class="sourceLine" id="cb3-49" data-line-number="49">        g <span class="op">=</span> np.zeros((<span class="va">self</span>.N, <span class="dv">12</span>))</a>
+<a class="sourceLine" id="cb3-50" data-line-number="50">        xi <span class="op">=</span> np.zeros((<span class="va">self</span>.N, <span class="dv">6</span>))</a>
+<a class="sourceLine" id="cb3-51" data-line-number="51">        eta <span class="op">=</span> np.zeros((<span class="va">self</span>.N, <span class="dv">6</span>))</a>
+<a class="sourceLine" id="cb3-52" data-line-number="52"></a>
+<a class="sourceLine" id="cb3-53" data-line-number="53">        <span class="co"># set xi and eta</span></a>
+<a class="sourceLine" id="cb3-54" data-line-number="54">        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>.N):</a>
+<a class="sourceLine" id="cb3-55" data-line-number="55">            s <span class="op">=</span> <span class="va">self</span>.ds <span class="op">*</span> i</a>
+<a class="sourceLine" id="cb3-56" data-line-number="56">            xi[i, :] <span class="op">=</span> <span class="va">self</span>.xi_init(s)</a>
+<a class="sourceLine" id="cb3-57" data-line-number="57">            eta[i, :] <span class="op">=</span> <span class="va">self</span>.eta_init(s)</a>
+<a class="sourceLine" id="cb3-58" data-line-number="58"></a>
+<a class="sourceLine" id="cb3-59" data-line-number="59">        <span class="co"># integrate G</span></a>
+<a class="sourceLine" id="cb3-60" data-line-number="60">        G <span class="op">=</span> np.eye(<span class="dv">4</span>)</a>
+<a class="sourceLine" id="cb3-61" data-line-number="61">        g[<span class="dv">0</span>, :] <span class="op">=</span> flatten(G)</a>
+<a class="sourceLine" id="cb3-62" data-line-number="62">        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="va">self</span>.N):</a>
+<a class="sourceLine" id="cb3-63" data-line-number="63">            G <span class="op">=</span> G <span class="op">@</span> expm(se(<span class="va">self</span>.ds <span class="op">*</span> xi[i <span class="op">-</span> <span class="dv">1</span>, :]))</a>
+<a class="sourceLine" id="cb3-64" data-line-number="64">            g[i, :] <span class="op">=</span> flatten(G)</a>
+<a class="sourceLine" id="cb3-65" data-line-number="65"></a>
+<a class="sourceLine" id="cb3-66" data-line-number="66">        <span class="co"># set state</span></a>
+<a class="sourceLine" id="cb3-67" data-line-number="67">        <span class="va">self</span>.g <span class="op">=</span> g</a>
+<a class="sourceLine" id="cb3-68" data-line-number="68">        <span class="va">self</span>.xi <span class="op">=</span> xi</a>
+<a class="sourceLine" id="cb3-69" data-line-number="69">        <span class="va">self</span>.eta <span class="op">=</span> eta</a>
+<a class="sourceLine" id="cb3-70" data-line-number="70"></a>
+<a class="sourceLine" id="cb3-71" data-line-number="71">    <span class="kw">def</span> plot(<span class="va">self</span>, ax<span class="op">=</span><span class="va">None</span>):</a>
+<a class="sourceLine" id="cb3-72" data-line-number="72">        <span class="co"># not sure if this is the best way, but if an axis isn&#39;t specified generate it, if it is then modify it</span></a>
+<a class="sourceLine" id="cb3-73" data-line-number="73">        <span class="cf">if</span> ax <span class="kw">is</span> <span class="va">None</span>:</a>
+<a class="sourceLine" id="cb3-74" data-line-number="74">            fig, ax <span class="op">=</span> plt.subplot(<span class="dv">111</span>, projection<span class="op">=</span><span class="st">&#39;3d&#39;</span>)</a>
+<a class="sourceLine" id="cb3-75" data-line-number="75">        ax.plot(<span class="va">self</span>.g[:, <span class="dv">9</span>], <span class="va">self</span>.g[:, <span class="dv">10</span>], <span class="va">self</span>.g[:, <span class="dv">11</span>])</a>
+<a class="sourceLine" id="cb3-76" data-line-number="76">        <span class="cf">return</span> ax</a>
+<a class="sourceLine" id="cb3-77" data-line-number="77"></a>
+<a class="sourceLine" id="cb3-78" data-line-number="78">    <span class="kw">def</span> energy(<span class="va">self</span>):</a>
+<a class="sourceLine" id="cb3-79" data-line-number="79">        H <span class="op">=</span> <span class="dv">0</span>  <span class="co"># total energy (aka Hamiltonian)</span></a>
+<a class="sourceLine" id="cb3-80" data-line-number="80">        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>.N):</a>
+<a class="sourceLine" id="cb3-81" data-line-number="81">            T <span class="op">=</span> <span class="va">self</span>.eta[i, :].T <span class="op">@</span> <span class="va">self</span>.M <span class="op">@</span> <span class="va">self</span>.eta[i, :]</a>
+<a class="sourceLine" id="cb3-82" data-line-number="82">            U <span class="op">=</span> (<span class="va">self</span>.xi[i, :] <span class="op">-</span> <span class="va">self</span>.xi_ref).T <span class="op">@</span> <span class="va">self</span>.K <span class="op">@</span> (<span class="va">self</span>.xi[i, :] <span class="op">-</span> <span class="va">self</span>.xi_ref)</a>
+<a class="sourceLine" id="cb3-83" data-line-number="83">            H <span class="op">+=</span> <span class="dv">1</span> <span class="op">/</span> <span class="dv">2</span> <span class="op">*</span> (T <span class="op">+</span> U)</a>
+<a class="sourceLine" id="cb3-84" data-line-number="84">        <span class="cf">return</span> <span class="va">self</span>.ds <span class="op">*</span> H</a>
+<a class="sourceLine" id="cb3-85" data-line-number="85"></a>
+<a class="sourceLine" id="cb3-86" data-line-number="86">    <span class="kw">def</span> step(<span class="va">self</span>, dt, q):</a>
+<a class="sourceLine" id="cb3-87" data-line-number="87">        <span class="co"># since we are modifying the state want to keep track of the previous state for the integration process</span></a>
+<a class="sourceLine" id="cb3-88" data-line-number="88">        prev <span class="op">=</span> copy.deepcopy(<span class="va">self</span>)</a>
+<a class="sourceLine" id="cb3-89" data-line-number="89">        <span class="co"># just need to solve for xi0 and the state should be updated</span></a>
+<a class="sourceLine" id="cb3-90" data-line-number="90">        xi0 <span class="op">=</span> fsolve(<span class="kw">lambda</span> x: <span class="va">self</span>._condition(prev, dt, x, q), <span class="va">self</span>.xi[<span class="dv">0</span>, :])</a>
+<a class="sourceLine" id="cb3-91" data-line-number="91"></a>
+<a class="sourceLine" id="cb3-92" data-line-number="92">    <span class="kw">def</span> _condition(<span class="va">self</span>, prev, dt, xi0, q):</a>
+<a class="sourceLine" id="cb3-93" data-line-number="93">        <span class="co"># integrate and see if the tip condition is satisfied</span></a>
+<a class="sourceLine" id="cb3-94" data-line-number="94">        <span class="va">self</span>._integrate(prev, dt, xi0, q)</a>
+<a class="sourceLine" id="cb3-95" data-line-number="95"></a>
+<a class="sourceLine" id="cb3-96" data-line-number="96">        <span class="co"># all tip loads</span></a>
+<a class="sourceLine" id="cb3-97" data-line-number="97">        W <span class="op">=</span> <span class="dv">0</span></a>
+<a class="sourceLine" id="cb3-98" data-line-number="98">        <span class="co"># data</span></a>
+<a class="sourceLine" id="cb3-99" data-line-number="99">        g <span class="op">=</span> unflatten(<span class="va">self</span>.g[<span class="op">-</span><span class="dv">1</span>,:])</a>
+<a class="sourceLine" id="cb3-100" data-line-number="100">        xi <span class="op">=</span> <span class="va">self</span>.xi[<span class="op">-</span><span class="dv">1</span>,:]</a>
+<a class="sourceLine" id="cb3-101" data-line-number="101">        eta <span class="op">=</span> <span class="va">self</span>.xi[<span class="op">-</span><span class="dv">1</span>,:]</a>
+<a class="sourceLine" id="cb3-102" data-line-number="102">        xi_dot <span class="op">=</span> (<span class="va">self</span>.xi[<span class="op">-</span><span class="dv">1</span>,:] <span class="op">-</span> prev.xi[<span class="op">-</span><span class="dv">1</span>,:])<span class="op">/</span>dt</a>
+<a class="sourceLine" id="cb3-103" data-line-number="103">        eta_dot <span class="op">=</span> (<span class="va">self</span>.eta[<span class="op">-</span><span class="dv">1</span>,:] <span class="op">-</span> prev.eta[<span class="op">-</span><span class="dv">1</span>,:])<span class="op">/</span>dt</a>
+<a class="sourceLine" id="cb3-104" data-line-number="104">        <span class="cf">for</span> load <span class="kw">in</span> <span class="va">self</span>.loads:</a>
+<a class="sourceLine" id="cb3-105" data-line-number="105">            W <span class="op">+=</span> load.tip_load(g, xi, eta, xi_dot, eta_dot, <span class="va">self</span>, q)</a>
+<a class="sourceLine" id="cb3-106" data-line-number="106"></a>
+<a class="sourceLine" id="cb3-107" data-line-number="107">        <span class="cf">return</span> <span class="va">self</span>.K <span class="op">@</span> (<span class="va">self</span>.xi[<span class="op">-</span><span class="dv">1</span>, :] <span class="op">-</span> <span class="va">self</span>.xi_ref) <span class="op">-</span> W</a>
+<a class="sourceLine" id="cb3-108" data-line-number="108"></a>
+<a class="sourceLine" id="cb3-109" data-line-number="109">    <span class="kw">def</span> _integrate(<span class="va">self</span>, prev, dt, xi0, q):</a>
+<a class="sourceLine" id="cb3-110" data-line-number="110">        <span class="va">self</span>.xi[<span class="dv">0</span>, :] <span class="op">=</span> xi0</a>
+<a class="sourceLine" id="cb3-111" data-line-number="111"></a>
+<a class="sourceLine" id="cb3-112" data-line-number="112">        <span class="co"># integration over the body (don&#39;t need the initial point as the initial values are determined already)</span></a>
+<a class="sourceLine" id="cb3-113" data-line-number="113">        g_half <span class="op">=</span> np.eye(<span class="dv">4</span>)  <span class="co"># known initial condition</span></a>
+<a class="sourceLine" id="cb3-114" data-line-number="114">        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>.N <span class="op">-</span> <span class="dv">1</span>):</a>
+<a class="sourceLine" id="cb3-115" data-line-number="115">            <span class="co"># averaging over steps to get half step values</span></a>
+<a class="sourceLine" id="cb3-116" data-line-number="116">            xi_half <span class="op">=</span> (<span class="va">self</span>.xi[i, :] <span class="op">+</span> prev.xi[i, :]) <span class="op">/</span> <span class="dv">2</span></a>
+<a class="sourceLine" id="cb3-117" data-line-number="117">            eta_half <span class="op">=</span> (<span class="va">self</span>.eta[i, :] <span class="op">+</span> prev.eta[i, :]) <span class="op">/</span> <span class="dv">2</span></a>
+<a class="sourceLine" id="cb3-118" data-line-number="118"></a>
+<a class="sourceLine" id="cb3-119" data-line-number="119">            <span class="co"># implicit midpoint approximation</span></a>
+<a class="sourceLine" id="cb3-120" data-line-number="120">            xi_dot <span class="op">=</span> (<span class="va">self</span>.xi[i, :] <span class="op">-</span> prev.xi[i, :]) <span class="op">/</span> dt</a>
+<a class="sourceLine" id="cb3-121" data-line-number="121">            eta_dot <span class="op">=</span> (<span class="va">self</span>.eta[i, :] <span class="op">-</span> prev.eta[i, :]) <span class="op">/</span> dt</a>
+<a class="sourceLine" id="cb3-122" data-line-number="122"></a>
+<a class="sourceLine" id="cb3-123" data-line-number="123">            <span class="co"># external loads</span></a>
+<a class="sourceLine" id="cb3-124" data-line-number="124">            A_bar <span class="op">=</span> <span class="dv">0</span></a>
+<a class="sourceLine" id="cb3-125" data-line-number="125">            B_bar <span class="op">=</span> <span class="dv">0</span></a>
+<a class="sourceLine" id="cb3-126" data-line-number="126">            <span class="co"># viscosity</span></a>
+<a class="sourceLine" id="cb3-127" data-line-number="127">            B_bar <span class="op">+=</span> <span class="va">self</span>.V <span class="op">@</span> xi_dot</a>
+<a class="sourceLine" id="cb3-128" data-line-number="128"></a>
+<a class="sourceLine" id="cb3-129" data-line-number="129">            <span class="co"># other loads</span></a>
+<a class="sourceLine" id="cb3-130" data-line-number="130">            <span class="cf">for</span> load <span class="kw">in</span> <span class="va">self</span>.loads:</a>
+<a class="sourceLine" id="cb3-131" data-line-number="131">                A, B <span class="op">=</span> load.dist_load(g_half, xi_half, eta_half, xi_dot, eta_dot, <span class="va">self</span>, q)</a>
+<a class="sourceLine" id="cb3-132" data-line-number="132">                A_bar <span class="op">+=</span> A</a>
+<a class="sourceLine" id="cb3-133" data-line-number="133">                B_bar <span class="op">+=</span> B</a>
+<a class="sourceLine" id="cb3-134" data-line-number="134"></a>
+<a class="sourceLine" id="cb3-135" data-line-number="135">            <span class="co"># spatial derivatives</span></a>
+<a class="sourceLine" id="cb3-136" data-line-number="136">            xi_der <span class="op">=</span> np.linalg.inv(<span class="va">self</span>.K <span class="op">-</span> A_bar) <span class="op">@</span> (</a>
+<a class="sourceLine" id="cb3-137" data-line-number="137">                    (<span class="va">self</span>.M <span class="op">@</span> eta_dot) <span class="op">-</span> (adjoint(eta_half).T <span class="op">@</span> <span class="va">self</span>.M <span class="op">@</span> eta_half) <span class="op">+</span> (</a>
+<a class="sourceLine" id="cb3-138" data-line-number="138">                    adjoint(xi_half).T <span class="op">@</span> <span class="va">self</span>.K <span class="op">@</span> (xi_half <span class="op">-</span> <span class="va">self</span>.xi_ref)) <span class="op">+</span> B_bar)</a>
+<a class="sourceLine" id="cb3-139" data-line-number="139">            eta_der <span class="op">=</span> xi_dot <span class="op">-</span> (adjoint(xi_half) <span class="op">@</span> eta_half)</a>
+<a class="sourceLine" id="cb3-140" data-line-number="140"></a>
+<a class="sourceLine" id="cb3-141" data-line-number="141">            <span class="co"># explicit Euler step</span></a>
+<a class="sourceLine" id="cb3-142" data-line-number="142">            xi_half_next <span class="op">=</span> xi_half <span class="op">+</span> <span class="va">self</span>.ds <span class="op">*</span> xi_der</a>
+<a class="sourceLine" id="cb3-143" data-line-number="143">            eta_half_next <span class="op">=</span> eta_half <span class="op">+</span> <span class="va">self</span>.ds <span class="op">*</span> eta_der</a>
+<a class="sourceLine" id="cb3-144" data-line-number="144">            g_half <span class="op">=</span> g_half <span class="op">@</span> expm(se(<span class="va">self</span>.ds <span class="op">*</span> xi_half))</a>
+<a class="sourceLine" id="cb3-145" data-line-number="145"></a>
+<a class="sourceLine" id="cb3-146" data-line-number="146">            <span class="co"># determine next step from half step value</span></a>
+<a class="sourceLine" id="cb3-147" data-line-number="147">            <span class="va">self</span>.xi[i <span class="op">+</span> <span class="dv">1</span>, :] <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> xi_half_next <span class="op">-</span> prev.xi[i <span class="op">+</span> <span class="dv">1</span>, :]</a>
+<a class="sourceLine" id="cb3-148" data-line-number="148">            <span class="va">self</span>.eta[i <span class="op">+</span> <span class="dv">1</span>, :] <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> eta_half_next <span class="op">-</span> prev.eta[i <span class="op">+</span> <span class="dv">1</span>, :]</a>
+<a class="sourceLine" id="cb3-149" data-line-number="149"></a>
+<a class="sourceLine" id="cb3-150" data-line-number="150">        <span class="co"># midpoint RKMK to step the g values</span></a>
+<a class="sourceLine" id="cb3-151" data-line-number="151">        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="va">self</span>.N):</a>
+<a class="sourceLine" id="cb3-152" data-line-number="152">            <span class="va">self</span>.g[i, :] <span class="op">=</span> flatten(unflatten(prev.g[i, :]) <span class="op">@</span> expm(se(dt <span class="op">*</span> (<span class="va">self</span>.eta[i, :] <span class="op">+</span> prev.eta[i, :]) <span class="op">/</span> <span class="dv">2</span>)))</a></code></pre></div>
+<p>Since the code is just reorganized and not changed all the previous results should hold.</p>
+</body>
+</html>

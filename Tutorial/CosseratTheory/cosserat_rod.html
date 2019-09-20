@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Cosserat Rod</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header>
+<h1 class="title">Cosserat Rod</h1>
+</header>
+<p><span class="math display">\[
+\newcommand{\real}{\mathbb{R}}
+\newcommand{\der}[2]{\frac{d#1}{d#2}}
+\newcommand{\pder}[2]{\frac{\partial#1}{\partial#2}}
+\newcommand{\D}[1]{\Delta#1}
+\newcommand{\inner}[2]{\langle#1, #2\rangle}
+\]</span></p>
+<p>In the simulations we focus on specializing Cosserat theory to rods or slender bodies. For a rod we simplify to one spatial parameter, <span class="math inline">\(s\)</span>, and the cross sections are assumed to be rigid planes. This leads to some simplifications that I’ll go through.</p>
+<h1 id="kinematics">Kinematics</h1>
+<p>For the kinematics we still have a homogeneous transformation matrix describing the configuration of every point in the body. However, now that we have a single spatial parameter, <span class="math inline">\(s\in[0,L]\)</span> where <span class="math inline">\(L\)</span> is the length of the rod in the reference configuration, we can alter the definition slightly. First, we can determine the centerline which is the curve passing through all the centroids of the cross sections parameterized by <span class="math inline">\(s\)</span>. It is not necessary to make the centerline pass through the centroid of the cross sections (just each value of <span class="math inline">\(s\)</span> should be associated uniquely with a cross section), but doing so leads to some simplifications in the derivations of the physics. Note that <span class="math inline">\(s\)</span> can be defined over any bounded interval it is just most common to define it over <span class="math inline">\([0,L]\)</span>.</p>
+<p>For the centerline we have the kinematics and configuration specified as:</p>
+<p><span class="math display">\[\begin{equation}
+    g(s) = \begin{bmatrix} R(s) &amp; p(s) \\ 0 &amp; 1 \end{bmatrix}
+\end{equation}\]</span> where <span class="math inline">\(R\in SO(3)\)</span> and <span class="math inline">\(p\in\real^3\)</span> are the rotation and position repectively.</p>
+<p>Then, since we assume that the cross sections are rigid the configuration for any point is just a translation away from <span class="math inline">\(g\)</span>: <span class="math display">\[\begin{equation}
+    G(x,y,s) = g(s)\begin{bmatrix} I_{3\times3} &amp; r(x,y) \\ 0 &amp; 1 \end{bmatrix}
+\end{equation}\]</span> where <span class="math inline">\(G\)</span> is the configuration of any point in the body, <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> are for locating the position over a cross section, and <span class="math inline">\(r\)</span> is the displacement from the centerline. It is possible to include a rotation rather than an identity matrix to account for things such as fibers in the body, but assuming that the body is heterogeneous this isn’t necessary. Then, do to the fact that <span class="math inline">\(g(s)\)</span> was defined to be at the centroid of the cross sections we have: <span class="math display">\[\begin{equation}
+    \iint r dA = 0
+\end{equation}\]</span> due to symmetry. This will be useful in determining the inertia and stiffness later.</p>
+<p>With only one spatial parameter we only have 2 twists: the spatial twist, <span class="math inline">\(\xi\)</span>, and the temporal twist, <span class="math inline">\(\eta\)</span>. <span class="math display">\[\begin{gather}
+    \pder{}{s}g = g&#39; = g\hat{\xi} \\
+    \pder{}{t}g = \dot{g} = g\hat{\eta}
+\end{gather}\]</span></p>
+<p>The relationship between twists is then: <span class="math display">\[\begin{equation}
+    \dot{\xi} = \eta&#39; + ad_\xi\eta
+\end{equation}\]</span></p>
+<p>So, the kinematics simplifies a bit from the most general case.</p>
+<h1 id="deformations">Deformations</h1>
+<p>The deformation gradient and strain definitions simplify a bit as well primarily due to the cross sections being assumed rigid.</p>
+<p>The deformation gradient becomes: <span class="math display">\[\begin{equation}
+    F = R \begin{bmatrix} \vec{x} &amp; \vec{y} &amp; \nu -\hat{r}\omega \end{bmatrix} 
+\end{equation}\]</span> where <span class="math inline">\(\vec{x} = [1, 0, 0]^T\)</span>, <span class="math inline">\(\vec{y} = [1, 0, 0]^T\)</span>, and <span class="math inline">\(\xi = [\nu, \omega]^T\)</span>. For the sake of simplifying the notation I introduce: <span class="math display">\[\begin{gather}
+    \gamma + \gamma^{*} = (\D{\nu} - \hat{r}\D{\omega}) + (\nu^{*} - \hat{r}\omega^{*})
+\end{gather}\]</span> where <span class="math inline">\(\D{}\)</span> stands for change in and <span class="math inline">\(*\)</span> denotes the value in the reference configuration. This allows <span class="math inline">\(F\)</span> to be written: <span class="math display">\[\begin{equation}
+    F = R \begin{bmatrix} \vec{x} &amp; \vec{y} &amp; \gamma + \gamma^{*} \end{bmatrix}
+\end{equation}\]</span></p>
+<p>The Green-Lagrange strain, <span class="math inline">\(\varepsilon\)</span>, follows as:</p>
+<p><span class="math display">\[\begin{equation}
+    \varepsilon = \frac{1}{2} (F^TF - (F^{*})^TF^{*})
+\end{equation}\]</span></p>
+<p>Breaking the strain into components we get: <span class="math display">\[\begin{gather}
+    \varepsilon_{xx} = \varepsilon_{yy} = \varepsilon_{xy} = 0 \\
+    \varepsilon_{xs} = \inner{\gamma+\gamma^{*}}{\vec{x}} \\
+    \varepsilon_{ys} = \inner{\gamma+\gamma^{*}}{\vec{y}} \\
+    \varepsilon_{ss} = \frac{1}{2} \inner{\gamma}{\gamma} + \inner{\gamma}{\gamma^{*}}\\
+\end{gather}\]</span> typically <span class="math inline">\(\gamma^{*} = [0, 0, 1]^T\)</span> as that corresponds to a straight reference configuration.</p>
+<h1 id="physics">Physics</h1>
+<p>For the physics we still use Hamilton’s principle, but we can determine simpler forms of the kinetic energy, <span class="math inline">\(T\)</span>, and the strain energy, <span class="math inline">\(U\)</span>.</p>
+<h2 id="kinetic-energy">Kinetic Energy</h2>
+<p>For the kinetic energy we have: <span class="math display">\[\begin{equation}
+    T = \frac{1}{2}\iiint \rho \inner{\dot{p}_G}{\dot{p}_G}dx\,dy\,ds
+\end{equation}\]</span> where <span class="math inline">\(p_G\)</span> is the position component of <span class="math inline">\(G\)</span>. Defining the linear and angular components of <span class="math inline">\(\eta=[w, v]^T\)</span> we can expand the kinetic energy as: <span class="math display">\[\begin{equation}
+    T = \frac{1}{2}\iiint \rho \inner{v - \hat{r}w}{v-\hat{r}w} dx\,dy\,ds = \frac{1}{2}\iiint \rho \inner{v}{v} - 2\inner{v}{\hat{r}w} - \inner{w}{\hat{r}^2w} dx\,dy\,ds 
+\end{equation}\]</span></p>
+<p>Separating out terms that are independent of integration variables we have: <span class="math display">\[\begin{equation}
+    T = \frac{1}{2} \left( \int \rho \inner{v}{v} A ds + 2 \int \inner{v}{\hat{w}\iint r dx\,dy} ds - \int \inner{w}{(\iint \hat{r}^2 dx\,dy) w} ds \right)
+\end{equation}\]</span></p>
+<p>Using the centroid definition this simplifies and rearranges to: <span class="math display">\[\begin{equation}
+    T = \frac{1}{2} \int \inner{\eta}{M\eta} ds
+\end{equation}\]</span> where <span class="math inline">\(M=rho*diag([I_x,I_y,J,A,A,A])\)</span> with <span class="math inline">\(I_x\)</span> and <span class="math inline">\(I_y\)</span> are the second moments of area, <span class="math inline">\(J\)</span> is the polar second moment of area, and <span class="math inline">\(A\)</span> is the cross sectional area. <span class="math inline">\(M\)</span> is interpreted as the inertia matrix for the cross section.</p>
+<h2 id="strain-energy">Strain Energy</h2>
+<p>For the strain energy we have a bit more involved derivation. To determine the stress, <span class="math inline">\(\sigma\)</span>, we need a constitutive material law and with the Green-Lagrange strain we have quadratic terms to consider. Taking advantage of the 0’s in the strain and using a similar process to the kinetic energy we can simplify the strain energy as: <span class="math display">\[\begin{equation}
+    U = \frac{1}{2} \int \inner{\D{\xi}}{\Psi(\xi)} ds
+\end{equation}\]</span> where <span class="math inline">\(\Psi\)</span> is the wrench on the cross section due to the deformation. <span class="math inline">\(\Psi\)</span> can be rather complex depending on the chosen material properties; however, if we use a linear constitutive law and assume the quadratic terms in the strain are negligible then the strain energy simplifies to: <span class="math display">\[\begin{equation}
+    U = \frac{1}{2} \int \inner{\D{\xi}}{K\D{\xi}} ds
+\end{equation}\]</span> where <span class="math inline">\(K=diag([EI_x,EI_y,GJ,GA,GA,EA])\)</span> is the stiffness matrix for the cross section with <span class="math inline">\(E\)</span> as the Young’s modulus and <span class="math inline">\(G\)</span> as the shear modulus. This is a very convenient and simple approximation to the strain energy that we will use throughout.</p>
+<h2 id="dynamics-equations">Dynamics Equations</h2>
+<p>When evaluating Hamilton’s principle given the definitions for the kinetic and strain energy we get the dynamics in the weak form. Converting to the strong form we have: <span class="math display">\[\begin{equation}
+(M\dot{\eta} - ad_\eta^TM\eta) - ((K\D{\xi})&#39; - ad_\xi^TK\D{\xi}) + \bar{W} = 0 
+\end{equation}\]</span></p>
+<p>Then, including the kinematics the PDEs describing the dynamcis are: <span class="math display">\[\begin{gather}
+    (M\dot{\eta} - ad_\eta^TM\eta) - ((K\D{\xi})&#39; - ad_\xi^TK\D{\xi}) + \bar{W} = 0 \\
+    g&#39; = g\hat{\xi} \\
+    \dot{g} = g\hat{\eta} \\
+    \dot{\xi} = \eta&#39; + ad_\xi\eta
+\end{gather}\]</span></p>
+<p>For the statics we simply remove the time dependent terms.</p>
+<h2 id="external-loads">External Loads</h2>
+<p>The external loads are included in <span class="math inline">\(\bar{W}\)</span> the components of which are actuation loads, gravity, viscosity, etc. I won’t be going through their derivation here, but will mention them when relevant.</p>
+</body>
+</html>
