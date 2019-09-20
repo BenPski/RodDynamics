@@ -2,8 +2,6 @@
 title: First Abstractions
 ---
 
-Next: [Loads](../02_Loads/loads.html)
-
 In the first implementation of the dynamics we can see some repetition and inconvenience in the code, primarily in the definition of the rod properties and simulation parameters. Here we will work on making this a slightly more friendly interface to work with while still focusing on the same system as before.
 
 First we can abstract the definition of the rod properties. In this case we still only look at a uniform cylindrical body for ease. We can define the `Rod` class to store this information.

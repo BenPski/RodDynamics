@@ -2,8 +2,6 @@
 title: Cable Actuation
 ---
 
-Next: [Load Generalization](../04_LoadGeneralization/general.html)
-
 With the external loads added it is time to look at more complicated loads from actuators. The simplest kind of actuator is the cable actuator. It exerts both a distributed load and a load at the tip of the rod. For this we assume that the cable is embedded within the rod and that there is no friction. There will be several changes necessary to the code to accommodate these actuators. We now need to handle time varying inputs, specifying actuator positions, and there are some complications with the distributed load that makes the integration a bit more involved. At first we will hardcode everything and then generalize as we have been doing.
 
 The actuators will be embedded some displacement from the centerline, $r_i$, where $i$ indicates the actuator. For now lets assume there are 3 cables half the radius from the center of the rod and placed symmetrically around the center. The definition of $r_i$ is:

@@ -2,7 +2,6 @@
 title: Generalizing the Loads
 ---
 
-Next: [Segments](../05_Segments/segments.html)
 
 For working with the rods the main determinant of the behavior are the present external loads, but having to define and redefine them over and over could get tedious especially when they get mixed and matched. This leads to wanting to generalize the loads a bit so they can be easily swapped in and out for the simulations. The loads we have considered so far are gravity, viscosity, and cable actuators and they influence the tip load for the boundary condition and generate $\bar{A}$ and $\bar{B}$ for the distributed load. So, a load should implement how to compute their distributed load and their tip load and any internal information they need. I'm going to make an execpetion for viscosity as it is a material property so I'm leaving it in the rod definition. The resulting abstract class for loads is:
 

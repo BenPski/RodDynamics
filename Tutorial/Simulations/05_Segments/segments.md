@@ -2,8 +2,6 @@
 title: Multiple Segments
 ---
 
-Next: [Other Boundary Conditions](../06_OtherBoundaryConditions/conditions.html)
-
 Now that a single segment has been defined and works it would be nice to work with multiple segments in series. This could be for having complex layouts of actuators or it could be for having point loads throughout the body. The major thing this helps with is point loads from external loads or from actuators being fixed to certain spots. Modeling a point load as a distributed force is relatively difficult as it needs to be defined by a dirac delta which would only be evaluated if a node is exactly at the right spot all of which is cumbersome. However, splitting into segments provides a simpler way of dealing with point loads as they act like tip conditions for their segment. So, what needs to happen is creating an interface for defining a series of segment that has the same interface as the single segment rods defined before and the conditions at the interface between segments needs to be handled properly.
 
 If we look at the initial definition for the rods and think about what it'd be like to put them in series we see that the tip node for one rod is the base node for the other and therefore should share the same state. So, what the integrator will have to do is make the state for these nodes consistent. This means that the system still only has one unknown initial condition, the one at the very base, and therefore can use the same scheme for solving as a single rod. Effectively doing this just guarantees that a node will be at the right location for a point load, but it also allows for different rod definitions to be easily joined.
