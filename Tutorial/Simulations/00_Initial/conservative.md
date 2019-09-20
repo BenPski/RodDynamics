@@ -2,9 +2,11 @@
 title: "Integration: Conservative System"
 ---
 
-$$
+`$$
 \newcommand{\D}[1]{\Delta#1}
-$$
+$$`{=html}
+
+`\newcommand{\D}[1]{\Delta#1}`{=latex}
 
 For the very initial introduction to the dynamics simulations I'll be going over the simulation of a rod with no external loads and one end fixed to a wall. So, it will start in some initially bent configuration and then bend back and forth forever. This will also be a very specialized scheme to specifically this situation which will be built on later both for adding loads and for abstracting the scheme to be useful in other contexts.
 

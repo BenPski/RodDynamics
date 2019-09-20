@@ -83,7 +83,6 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <header>
 <h1 class="title">Adding Loads to Dynamics</h1>
 </header>
-<p>Next: <a href="../03_Cables/cables.html">Cables</a></p>
 <p>With the dynamics a bit more organized we want to take a look at a bit more complicated systems. Now we will add some external loads, no actuation yet, for now we will look at both gravity and viscosity. So, we will now have a <span class="math inline">\(\bar{W}\)</span> term to include in the dynamics and we will have to integrate <span class="math inline">\(g\)</span> in the explicit Euler steps as well (left it out previously because it was unnecessary).</p>
 <p>The load for gravity is:</p>
 <p><span class="math display">\[

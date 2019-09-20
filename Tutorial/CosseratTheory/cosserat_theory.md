@@ -2,11 +2,15 @@
 title: "Cosserat Theory: Introduction"
 ---
 
-$$
+`$$
 \newcommand{\der}[2]{\frac{d#1}{d#2}}
 \newcommand{\pder}[2]{\frac{\partial#1}{\partial#2}}
 \newcommand{\inner}[2]{\langle #1, #2 \rangle}
-$$
+$$`{=html}
+
+`\newcommand{\der}[2]{\frac{d#1}{d#2}}
+ \newcommand{\pder}[2]{\frac{\partial#1}{\partial#2}}
+ \newcommand{\inner}[2]{\langle #1, #2 \rangle}`{=latex}
 
 # Overview
 

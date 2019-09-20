@@ -2,13 +2,19 @@
 title: Cosserat Rod
 ---
 
-$$
+`$$
 \newcommand{\real}{\mathbb{R}}
 \newcommand{\der}[2]{\frac{d#1}{d#2}}
 \newcommand{\pder}[2]{\frac{\partial#1}{\partial#2}}
 \newcommand{\D}[1]{\Delta#1}
 \newcommand{\inner}[2]{\langle#1, #2\rangle}
-$$
+$$`{=html}
+
+`\newcommand{\real}{\mathbb{R}}
+ \newcommand{\der}[2]{\frac{d#1}{d#2}}
+ \newcommand{\pder}[2]{\frac{\partial#1}{\partial#2}}
+ \newcommand{\D}[1]{\Delta#1}
+ \newcommand{\inner}[2]{\langle#1, #2\rangle}`{=latex}
 
 In the simulations we focus on specializing Cosserat theory to rods or slender bodies. For a rod we simplify to one spatial parameter, $s$, and the cross sections are assumed to be rigid planes. This leads to some simplifications that I'll go through.
 

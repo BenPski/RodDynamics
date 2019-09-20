@@ -20,13 +20,8 @@
 <header>
 <h1 class="title">Cosserat Rod</h1>
 </header>
-<p><span class="math display">\[
-\newcommand{\real}{\mathbb{R}}
-\newcommand{\der}[2]{\frac{d#1}{d#2}}
-\newcommand{\pder}[2]{\frac{\partial#1}{\partial#2}}
-\newcommand{\D}[1]{\Delta#1}
-\newcommand{\inner}[2]{\langle#1, #2\rangle}
-\]</span></p>
+<p>$$ \newcommand{\real}{\mathbb{R}} \newcommand{\der}[2]{\frac{d#1}{d#2}} \newcommand{\pder}[2]{\frac{\partial#1}{\partial#2}} \newcommand{\D}[1]{\Delta#1} \newcommand{\inner}[2]{\langle#1, #2\rangle} $$</p>
+<p></p>
 <p>In the simulations we focus on specializing Cosserat theory to rods or slender bodies. For a rod we simplify to one spatial parameter, <span class="math inline">\(s\)</span>, and the cross sections are assumed to be rigid planes. This leads to some simplifications that I’ll go through.</p>
 <h1 id="kinematics">Kinematics</h1>
 <p>For the kinematics we still have a homogeneous transformation matrix describing the configuration of every point in the body. However, now that we have a single spatial parameter, <span class="math inline">\(s\in[0,L]\)</span> where <span class="math inline">\(L\)</span> is the length of the rod in the reference configuration, we can alter the definition slightly. First, we can determine the centerline which is the curve passing through all the centroids of the cross sections parameterized by <span class="math inline">\(s\)</span>. It is not necessary to make the centerline pass through the centroid of the cross sections (just each value of <span class="math inline">\(s\)</span> should be associated uniquely with a cross section), but doing so leads to some simplifications in the derivations of the physics. Note that <span class="math inline">\(s\)</span> can be defined over any bounded interval it is just most common to define it over <span class="math inline">\([0,L]\)</span>.</p>
