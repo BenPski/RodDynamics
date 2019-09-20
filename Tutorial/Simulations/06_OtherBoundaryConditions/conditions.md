@@ -2,6 +2,7 @@
 title: Other Boundary Conditions
 ---
 
+
 So far we've looked at the specific case where one end of the rod is fixed and the other end is free. Now, there are two obvious cases to look at: both ends fixed and both ends free. For both ends fixed we have a known value for $g$ at both ends and for both ends free we have known values for $\xi$ based on the tip loads. This still leaves the situation with mixed boundary conditions so we will have to solve the dynamics similarly to before. 
 
 As a specific case we can start with a rod that is fixed at both ends, starts out straight and horizontal, and allowed to droop due to gravity. To start we can make the boundary conditions:

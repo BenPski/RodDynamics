@@ -83,6 +83,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <header>
 <h1 class="title">Generalizing the Loads</h1>
 </header>
+<p>Next: <a href="../05_Segments/segments.html">Segments</a></p>
 <p>For working with the rods the main determinant of the behavior are the present external loads, but having to define and redefine them over and over could get tedious especially when they get mixed and matched. This leads to wanting to generalize the loads a bit so they can be easily swapped in and out for the simulations. The loads we have considered so far are gravity, viscosity, and cable actuators and they influence the tip load for the boundary condition and generate <span class="math inline">\(\bar{A}\)</span> and <span class="math inline">\(\bar{B}\)</span> for the distributed load. So, a load should implement how to compute their distributed load and their tip load and any internal information they need. I’m going to make an execpetion for viscosity as it is a material property so I’m leaving it in the rod definition. The resulting abstract class for loads is:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="im">from</span> abc <span class="im">import</span> ABCMeta, abstractmethod</a>
 <a class="sourceLine" id="cb1-2" data-line-number="2"></a>

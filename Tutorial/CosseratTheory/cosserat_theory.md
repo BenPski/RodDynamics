@@ -116,4 +116,7 @@ This means Hamilton's principle can be restated as:
 
 However, when specializing to rods or surfaces the energy relationships can be simplified. 
 
-Evaluating the variations will define the dynamics relationship and removing any time dependent terms gives the statics. 
+Evaluating the variations will define the dynamics relationship and removing any time dependent terms gives the statics.
+
+
+Specifically for the rod case look at [Rod](cosserat_rod.html). 

@@ -82,6 +82,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <header>
 <h1 class="title">First Abstractions</h1>
 </header>
+<p>Next: <a href="../02_Loads/loads.html">Loads</a></p>
 <p>In the first implementation of the dynamics we can see some repetition and inconvenience in the code, primarily in the definition of the rod properties and simulation parameters. Here we will work on making this a slightly more friendly interface to work with while still focusing on the same system as before.</p>
 <p>First we can abstract the definition of the rod properties. In this case we still only look at a uniform cylindrical body for ease. We can define the <code>Rod</code> class to store this information.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">class</span> Rod():</a>

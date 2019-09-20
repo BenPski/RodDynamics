@@ -2,6 +2,8 @@
 title: "Integration: Conservative System"
 ---
 
+Next: [First Abstraction](../01_FirstAbstraction/abstraction.html)
+
 $$
 \newcommand{\D}[1]{\Delta#1}
 $$
@@ -497,3 +499,4 @@ if __name__ == "__main__":
     # plotDynamics(100, 20)
     plotEnergy(100,100)
 ```
+

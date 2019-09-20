@@ -2,6 +2,8 @@
 title: Adding Loads to Dynamics
 ---
 
+Next: [Cables](../03_Cables/cables.html)
+
 With the dynamics a bit more organized we want to take a look at a bit more complicated systems. Now we will add some external loads, no actuation yet, for now we will look at both gravity and viscosity. So, we will now have a $\bar{W}$ term to include in the dynamics and we will have to integrate $g$ in the explicit Euler steps as well (left it out previously because it was unnecessary). 
 
 The load for gravity is:

@@ -3,7 +3,7 @@ The generalized load defintions
 """
 from abc import ABCMeta, abstractmethod
 import numpy as np
-from utils import skew, Adjoint
+from Simulations.Utils import skew, Adjoint
 
 
 class Load(metaclass=ABCMeta):
@@ -90,10 +90,12 @@ class PointLoadBody(Load):
     def tip_load(self, g, xi, eta, xi_dot, eta_dot, rod, q):
         return self.W
 
+
 class PointLoadFixed(Load):
     """
     A constant point load defined in the fixed frame
     """
+
     def __init__(self, W):
         self.W = W
 
