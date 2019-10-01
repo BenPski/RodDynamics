@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Homepage</title>
+  <title>Tutorial</title>
   <style type="text/css">
       code{white-space: pre-wrap;}
       span.smallcaps{font-variant: small-caps;}
@@ -17,9 +17,32 @@
 </head>
 <body>
 <header>
-<h1 class="title">Homepage</h1>
+<h1 class="title">Tutorial</h1>
 </header>
-<p>To look at an introduction to the theory go to: <a href="CosseratTheory/cosserat_theory.html">Cosserat Theory</a></p>
-<p>For the beginning of the simulations go to: <a href="Simulations/implicit_integrator.html">Implicit Integrator</a></p>
+<p>This tutorial goes through the developed simulations for Cosserat rods. There are 3 main parts for learning about the simulation: the background theory, the description of the simulations and their development, and an example use case.</p>
+<p>The background theory is found in the <code>CosseratTheory</code> directory. Cosserat theory is described and the specific case of Cosserat rods are described as well which are what are implemented. An example of the currently implemented simulation is documented in the <code>example</code>.</p>
+<p>The actual implementation of the simulations and their development is detailed in the <code>Simulations</code> directory which is split into several sections. Each section contains its own relevant code and a description both in <code>html</code> and <code>pdf</code> form. The most developed code is found in the <code>python</code> directory at the root of the repository and should correspond to the latest section in the tutorial.</p>
+<h1 id="cosserat-theory">Cosserat Theory</h1>
+<h2 id="cosserat-theory-1">Cosserat Theory</h2>
+<p>Describes the idea behind a Cosserat theory</p>
+<h2 id="cosserat-rod">Cosserat Rod</h2>
+<p>The model for a Cosserat material restricted to the rod case.</p>
+<h1 id="tutorial">Tutorial</h1>
+<h2 id="initial">Initial</h2>
+<p>Goes through the implementation of a cantilever rod subject to now external forces and the code is written in a not very general way.</p>
+<h2 id="first-abstraction">First Abstraction</h2>
+<p>Runs the same simulation, but begins to generalize the code framework for easier use later.</p>
+<h2 id="loads">Loads</h2>
+<p>Starts to look at external loads. In this case viscosity and gravity.</p>
+<h2 id="cables">Cables</h2>
+<p>Implements cable loads to demonstrate controlling actuator inputs to the simulations.</p>
+<h2 id="load-generalizations">Load Generalizations</h2>
+<p>Implements a general interface for implementing different kinds of loads for the simulations.</p>
+<h2 id="segments">Segments</h2>
+<p>Develops separating the rod into multiple serial segments so that point loads and systems with multiple segments can be modelled.</p>
+<h2 id="other-boundary-conditions">Other Boundary Conditions</h2>
+<p>Looks at implementing simulations for boundary conditions other than cantilevered. Note that these do not work well and would need a different simulation approach.</p>
+<h1 id="example">Example</h1>
+<p>Goes through an example for the simulation.</p>
 </body>
 </html>
