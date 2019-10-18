@@ -1,10 +1,9 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from Simulations.Loads import Gravity, PointLoadBody, PointLoadFixed
+from loads import Gravity, PointLoadBody, PointLoadFixed
 import numpy as np
-from Simulations.Rod import Rod, Series
-from Simulations.Body import SimpleBody, FirstOrderMaterial, Cylinder
-
+from rod import Rod, Series
+from body import SimpleBody, FirstOrderMaterial, Cylinder
 
 if __name__ == "__main__":
 

@@ -48,6 +48,10 @@ Develops separating the rod into multiple serial segments so that point loads an
 
 Looks at implementing simulations for boundary conditions other than cantilevered. Note that these do not work well and would need a different simulation approach.
 
+## Material Properties
+
+Looks to generalize the material and geometric properties of a rod. Implements a general interface for arbitrary geometries and materials and shows simple ones.
+
 # Example
 
 Goes through an example for the simulation.

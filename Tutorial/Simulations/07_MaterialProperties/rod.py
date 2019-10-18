@@ -6,7 +6,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import copy
 import csv
 
-from Simulations.Utils import skew, unskew, adjoint, flatten, unflatten, se, unse
+from utils import skew, unskew, adjoint, flatten, unflatten, se, unse
 
 
 class Series():
@@ -211,9 +211,9 @@ class Rod():
 
             # spatial derivatives
             xi_der = np.linalg.inv(self.body.Psi_der(self.xi[i, :], s) - A_bar) @ (
-                    (self.body.M(s) @ eta_dot) - (adjoint(eta_half).T @ self.body.M(s) @ eta_half) + (
-                    adjoint(xi_half).T @ self.body.Psi(self.xi[i, :], s)) + B_bar - self.body.Psi_prime(
-                self.xi[i, :], s))
+                        (self.body.M(s) @ eta_dot) - (adjoint(eta_half).T @ self.body.M(s) @ eta_half) + (
+                            adjoint(xi_half).T @ self.body.Psi(self.xi[i, :], s)) + B_bar - self.body.Psi_prime(
+                    self.xi[i, :], s))
             eta_der = xi_dot - (adjoint(xi_half) @ eta_half)
 
             # explicit Euler step

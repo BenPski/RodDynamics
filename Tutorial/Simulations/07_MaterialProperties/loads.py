@@ -3,7 +3,7 @@ The generalized load definitions
 """
 from abc import ABCMeta, abstractmethod
 import numpy as np
-from Simulations.Utils import skew, Adjoint
+from utils import skew, Adjoint
 
 
 class Load(metaclass=ABCMeta):
