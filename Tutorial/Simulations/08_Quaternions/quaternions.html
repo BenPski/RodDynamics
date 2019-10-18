@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Representing Rotations as Quaternions</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header>
+<h1 class="title">Representing Rotations as Quaternions</h1>
+</header>
+<p>$$ \newcommand{\real}{\mathbb{R}} \newcommand{\der}[2]{\frac{d#1}{d#2}} \newcommand{\pder}[2]{\frac{\partial#1}{\partial#2}} \newcommand{\D}[1]{\Delta#1} \newcommand{\inner}[2]{\langle#1, #2\rangle} $$</p>
+<p></p>
+<p>When looking at the computational efficiency of the simulations one thing that can jump out is the use of <code>expm</code>. During the computations we use <code>expm</code> to step the kinematics, but this can be a relatively expensive thing to compute. We can specialize <code>expm</code> to work on <span class="math inline">\(SE(3)\)</span> and <span class="math inline">\(SO(3)\)</span> to improve the efficiency a bit, but it can still be expensive. So, we want to improve this and avoid expensive <code>expm</code> calls.</p>
+<p>The reason we needed <code>expm</code> in the first place is because rotation matrices are not closed under addition. When we step the rotations using a Runge-Kutta integrator we add the current step and a term based on the derivative to get the next step, but doing this causes the determinant of the rotation to drift making it no longer a pure rotation. One way to avoid this was the RKMK integration scheme, but we can change the representation to get more efficient computations. If we represent rotations as quaternions we no longer need the RKMK scheme, and therefore don’t use <code>expm</code>, because quaternions are closed under addition. One issue is that unit quaternions are rotations, but with addition they won’t remain unital. This can be avoided by having normalization be included in the change from quaternion to rotation matrix form. This ought to result in a more computationally efficient implementation of the kinematics.</p>
+<p>The main piece the quaternions change is the derivative in space and time, everywhere else in the computations we want to keep the rotation matrix form. To convert a quaternion to a rotation matrix we have:</p>
+<p><span class="math display">\[\begin{gather}
+q = q_0 +q_1i + q_2j + q_3k = \begin{bmatrix} q_0 \\ q_1 \\ q_2 \\q_3 \end{bmatrix} \\
+R = I + \frac{2}{q^Tq}
+    \begin{bmatrix}
+        -q_2^2-q_3^2 &amp; q_1q_2-q_3q_0 &amp; q_1q_3+q_2q_0 \\
+        q_1q_2+q_3q_0 &amp; -q_1^2-q_3^2 &amp; q_2q_3-q_1q_0 \\
+        q_1q_3-q_2q_0 &amp; q_2q_3+q_1q_0 &amp; -q_1^1-q_2^2
+    \end{bmatrix}
+\end{gather}\]</span> where <span class="math inline">\(q\)</span> is the quaternion using the typical <span class="math inline">\(i\)</span>, <span class="math inline">\(j\)</span>, <span class="math inline">\(k\)</span> basis.</p>
+<p>So, now we need to see how the derivative and integration changes. For rotations we originally had: <span class="math display">\[
+R&#39; = R\hat{\omega}
+\]</span></p>
+<p>With quaternions we instead have: <span class="math display">\[
+q&#39; = \frac{1}{2}
+    \begin{bmatrix}
+        0 &amp; -\omega_x &amp; -\omega_y &amp; -\omega_z \\
+        \omega_x &amp; 0 &amp; \omega_z &amp; -\omega_y \\
+        \omega_y &amp; -\omega_z &amp; 0 &amp; \omega_x \\
+        \omega_z &amp; \omega_y &amp; -\omega_x &amp; 0
+    \end{bmatrix}
+    q
+\]</span></p>
+</body>
+</html>
