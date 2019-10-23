@@ -210,10 +210,9 @@ class Rod():
                     B_bar += W
 
             # spatial derivatives
-            xi_der = np.linalg.inv(self.body.Psi_der(self.xi[i, :], s) - A_bar) @ (
+            xi_der = np.linalg.inv(self.body.Psi_der(xi_half, s) - A_bar) @ (
                         (self.body.M(s) @ eta_dot) - (adjoint(eta_half).T @ self.body.M(s) @ eta_half) + (
-                            adjoint(xi_half).T @ self.body.Psi(self.xi[i, :], s)) + B_bar - self.body.Psi_prime(
-                    self.xi[i, :], s))
+                            adjoint(xi_half).T @ self.body.Psi(xi_half, s)) + B_bar - self.body.Psi_prime(xi_half, s))
             eta_der = xi_dot - (adjoint(xi_half) @ eta_half)
 
             # explicit Euler step

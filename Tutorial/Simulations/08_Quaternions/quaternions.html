@@ -11,6 +11,69 @@
       span.underline{text-decoration: underline;}
       div.column{display: inline-block; vertical-align: top; width: 50%;}
   </style>
+  <style type="text/css">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
@@ -31,7 +94,7 @@ R = I + \frac{2}{q^Tq}
     \begin{bmatrix}
         -q_2^2-q_3^2 &amp; q_1q_2-q_3q_0 &amp; q_1q_3+q_2q_0 \\
         q_1q_2+q_3q_0 &amp; -q_1^2-q_3^2 &amp; q_2q_3-q_1q_0 \\
-        q_1q_3-q_2q_0 &amp; q_2q_3+q_1q_0 &amp; -q_1^1-q_2^2
+        q_1q_3-q_2q_0 &amp; q_2q_3+q_1q_0 &amp; -q_1^2-q_2^2
     \end{bmatrix}
 \end{gather}\]</span> where <span class="math inline">\(q\)</span> is the quaternion using the typical <span class="math inline">\(i\)</span>, <span class="math inline">\(j\)</span>, <span class="math inline">\(k\)</span> basis.</p>
 <p>So, now we need to see how the derivative and integration changes. For rotations we originally had: <span class="math display">\[
@@ -46,6 +109,27 @@ q&#39; = \frac{1}{2}
         \omega_z &amp; \omega_y &amp; -\omega_x &amp; 0
     \end{bmatrix}
     q
-\]</span></p>
+\]</span> where <span class="math inline">\(\omega\)</span> has been broken into components.</p>
+<p>Using this we have a fairly straightforward change in the integration steps except we have to do rotations and translations separately rather than unified in <span class="math inline">\(g\)</span>. The change to quaternions changes how <span class="math inline">\(g\)</span> is stored and accessed in the code and we will need a transformation from quaternion form to matrix form.</p>
+<p>Adding to utils:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="co"># quaternion form to matrix form</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">def</span> toMatrix(q):</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3">    <span class="cf">return</span> np.eye(<span class="dv">3</span>) <span class="op">+</span> <span class="dv">2</span> <span class="op">/</span> (q <span class="op">@</span> q) <span class="op">*</span> (np.array(</a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">        [[<span class="op">-</span>q[<span class="dv">2</span>] <span class="op">**</span> <span class="dv">2</span> <span class="op">-</span> q[<span class="dv">3</span>] <span class="op">**</span> <span class="dv">2</span>, q[<span class="dv">1</span>] <span class="op">*</span> q[<span class="dv">2</span>] <span class="op">-</span> q[<span class="dv">3</span>] <span class="op">*</span> q[<span class="dv">0</span>], q[<span class="dv">1</span>] <span class="op">*</span> q[<span class="dv">3</span>] <span class="op">+</span> q[<span class="dv">2</span>] <span class="op">*</span> q[<span class="dv">0</span>]],</a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">         [q[<span class="dv">1</span>] <span class="op">*</span> q[<span class="dv">2</span>] <span class="op">+</span> q[<span class="dv">3</span>] <span class="op">*</span> q[<span class="dv">0</span>], <span class="op">-</span>q[<span class="dv">1</span>] <span class="op">**</span> <span class="dv">2</span> <span class="op">-</span> q[<span class="dv">3</span>] <span class="op">**</span> <span class="dv">2</span>, q[<span class="dv">2</span>] <span class="op">*</span> q[<span class="dv">3</span>] <span class="op">-</span> q[<span class="dv">1</span>] <span class="op">*</span> q[<span class="dv">0</span>]],</a>
+<a class="sourceLine" id="cb1-6" data-line-number="6">         [q[<span class="dv">1</span>] <span class="op">*</span> q[<span class="dv">3</span>] <span class="op">-</span> q[<span class="dv">2</span>] <span class="op">*</span> q[<span class="dv">0</span>], q[<span class="dv">2</span>] <span class="op">*</span> q[<span class="dv">3</span>] <span class="op">+</span> q[<span class="dv">1</span>] <span class="op">*</span> q[<span class="dv">0</span>], <span class="op">-</span>q[<span class="dv">1</span>] <span class="op">**</span> <span class="dv">2</span> <span class="op">-</span> q[<span class="dv">2</span>] <span class="op">**</span> <span class="dv">2</span>]]))</a></code></pre></div>
+<p>Also it will be useful to convert from rotations to quaternions in the initialization of the rod and we will have:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co"># matrix form to quaternion</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="kw">def</span> toQuaternion(R):</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3">    t <span class="op">=</span> np.trace(R)</a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">    r <span class="op">=</span> np.sqrt(<span class="dv">1</span> <span class="op">+</span> t)</a>
+<a class="sourceLine" id="cb2-5" data-line-number="5">    w <span class="op">=</span> r <span class="op">/</span> <span class="dv">2</span></a>
+<a class="sourceLine" id="cb2-6" data-line-number="6">    x <span class="op">=</span> np.sign(R[<span class="dv">2</span>, <span class="dv">1</span>] <span class="op">-</span> R[<span class="dv">1</span>, <span class="dv">2</span>]) <span class="op">*</span> np.sqrt(<span class="dv">1</span> <span class="op">+</span> R[<span class="dv">0</span>, <span class="dv">0</span>] <span class="op">-</span> R[<span class="dv">1</span>, <span class="dv">1</span>] <span class="op">-</span> R[<span class="dv">2</span>, <span class="dv">2</span>]) <span class="op">/</span> <span class="dv">2</span></a>
+<a class="sourceLine" id="cb2-7" data-line-number="7">    y <span class="op">=</span> np.sign(R[<span class="dv">0</span>, <span class="dv">2</span>] <span class="op">-</span> R[<span class="dv">2</span>, <span class="dv">0</span>]) <span class="op">*</span> np.sqrt(<span class="dv">1</span> <span class="op">-</span> R[<span class="dv">0</span>, <span class="dv">0</span>] <span class="op">+</span> R[<span class="dv">1</span>, <span class="dv">1</span>] <span class="op">-</span> R[<span class="dv">2</span>, <span class="dv">2</span>]) <span class="op">/</span> <span class="dv">2</span></a>
+<a class="sourceLine" id="cb2-8" data-line-number="8">    z <span class="op">=</span> np.sign(R[<span class="dv">1</span>, <span class="dv">0</span>] <span class="op">-</span> R[<span class="dv">0</span>, <span class="dv">1</span>]) <span class="op">*</span> np.sqrt(<span class="dv">1</span> <span class="op">-</span> R[<span class="dv">0</span>, <span class="dv">0</span>] <span class="op">-</span> R[<span class="dv">1</span>, <span class="dv">1</span>] <span class="op">+</span> R[<span class="dv">2</span>, <span class="dv">2</span>]) <span class="op">/</span> <span class="dv">2</span></a>
+<a class="sourceLine" id="cb2-9" data-line-number="9">    <span class="cf">return</span> np.array([w, x, y, z])</a></code></pre></div>
+<p>For ease we can modify the <code>flatten</code> and <code>unflatten</code> functions to work with the new representation and keep the same structure.</p>
+<p>Now we can change <span class="math inline">\(g\)</span> to be storing the quaternion form and the position rather than a flattened representation of itself.</p>
+<p>The resulting changes are incorporated into the stepping and should give the same results just a bit more efficiently.</p>
 </body>
 </html>

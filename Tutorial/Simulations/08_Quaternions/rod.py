@@ -6,7 +6,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import copy
 import csv
 
-from utils import skew, unskew, adjoint, flatten, unflatten, se, unse
+from utils import skew, unskew, adjoint, flatten, unflatten, se, unse, toMatrix, toQuaternion
 
 
 class Series():
@@ -115,7 +115,7 @@ class Rod():
 
     def _initRod(self, g0=np.eye(4)):
         # setup g, xi, and eta for the initial configuration
-        g = np.zeros((self.N, 12))
+        g = np.zeros((self.N, 7))
         xi = np.zeros((self.N, 6))
         eta = np.zeros((self.N, 6))
 
@@ -141,7 +141,8 @@ class Rod():
         # not sure if this is the best way, but if an axis isn't specified generate it, if it is then modify it
         if ax is None:
             fig, ax = plt.subplot(111, projection='3d')
-        ax.plot(self.g[:, 9], self.g[:, 10], self.g[:, 11])
+        # ax.plot(self.g[:, 9], self.g[:, 10], self.g[:, 11])
+        ax.plot(self.g[:, 4], self.g[:, 5], self.g[:, 6])
         return ax
 
     def energy(self):
@@ -210,16 +211,24 @@ class Rod():
                     B_bar += W
 
             # spatial derivatives
-            xi_der = np.linalg.inv(self.body.Psi_der(self.xi[i, :], s) - A_bar) @ (
-                        (self.body.M(s) @ eta_dot) - (adjoint(eta_half).T @ self.body.M(s) @ eta_half) + (
-                            adjoint(xi_half).T @ self.body.Psi(self.xi[i, :], s)) + B_bar - self.body.Psi_prime(
-                    self.xi[i, :], s))
+            xi_der = np.linalg.inv(self.body.Psi_der(xi_half, s) - A_bar) @ (
+                    (self.body.M(s) @ eta_dot) - (adjoint(eta_half).T @ self.body.M(s) @ eta_half) + (
+                    adjoint(xi_half).T @ self.body.Psi(xi_half, s)) + B_bar - self.body.Psi_prime(xi_half, s))
             eta_der = xi_dot - (adjoint(xi_half) @ eta_half)
 
             # explicit Euler step
             xi_half_next = xi_half + self.ds * xi_der
             eta_half_next = eta_half + self.ds * eta_der
-            g_half = g_half @ expm(se(self.ds * xi_half))
+            R = g_half[:3, :3]
+            p = g_half[:3, 3]
+            p = p + self.ds * R @ xi_half[3:]
+            q = toQuaternion(R)
+            q = q + self.ds/2 * np.array(
+                [[0, -xi_half[0], -xi_half[1], -xi_half[2]], [xi_half[0], 0, xi_half[2], -xi_half[1]],
+                 [xi_half[1], -xi_half[2], 0, xi_half[0]], [xi_half[2], xi_half[1], -xi_half[0], 0]]) @ q
+            # R = toMatrix(q)
+            g_half = unflatten(np.concatenate([q, p]))
+            # g_half = g_half @ expm(se(self.ds * xi_half))
 
             # determine next step from half step value
             self.xi[i + 1, :] = 2 * xi_half_next - prev.xi[i + 1, :]
@@ -227,7 +236,14 @@ class Rod():
 
         # midpoint RKMK to step the g values
         for i in range(self.N):
-            self.g[i, :] = flatten(unflatten(prev.g[i, :]) @ expm(se(dt * (self.eta[i, :] + prev.eta[i, :]) / 2)))
+            eta_half = (self.eta[i,:] + prev.eta[i,:])/2
+            q = prev.g[i,:4]
+            p = prev.g[i,4:]
+            p = p + dt* toMatrix(q) @ eta_half[3:]
+            q = q + dt/2*np.array(
+                [[0, -eta_half[0], -eta_half[1], -eta_half[2]], [eta_half[0], 0, eta_half[2], -eta_half[1]],
+                 [eta_half[1], -eta_half[2], 0, eta_half[0]], [eta_half[2], eta_half[1], -eta_half[0], 0]]) @ q
+            self.g[i, :] = np.concatenate([q,p])
 
         return g_half
 

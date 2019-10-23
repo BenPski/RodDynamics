@@ -29,12 +29,14 @@ def Adjoint(g):
 
 # flatten a homogeneous transformation matrix to a vector
 def flatten(g):
-    return np.concatenate([np.reshape(g[:3, :3], (9,)), g[:3, 3]])
+    return np.concatenate([toQuaternion(g[:3,:3]), g[:3,3]])
+    # return np.concatenate([np.reshape(g[:3, :3], (9,)), g[:3, 3]])
 
 
 # unflatten a homogeneous transformation
 def unflatten(g):
-    return np.row_stack((np.column_stack((np.reshape(g[:9], (3, 3)), g[9:])), np.array([0, 0, 0, 1])))
+    return np.row_stack((np.column_stack((toMatrix(g[:4]), g[4:])), np.array([0, 0, 0, 1])))
+    # return np.row_stack((np.column_stack((np.reshape(g[:9], (3, 3)), g[9:])), np.array([0, 0, 0, 1])))
 
 
 # the matrix representation of a twist vector
@@ -45,3 +47,26 @@ def se(x):
 # inverse of se
 def unse(x):
     return np.array([x[2, 1], x[0, 2], x[1, 0], x[0, 3], x[1, 3], x[2, 3]])
+
+
+# quaternion form to matrix form
+def toMatrix(q):
+    return np.eye(3) + 2 / (q @ q) * (np.array(
+        [[-q[2] ** 2 - q[3] ** 2, q[1] * q[2] - q[3] * q[0], q[1] * q[3] + q[2] * q[0]],
+         [q[1] * q[2] + q[3] * q[0], -q[1] ** 2 - q[3] ** 2, q[2] * q[3] - q[1] * q[0]],
+         [q[1] * q[3] - q[2] * q[0], q[2] * q[3] + q[1] * q[0], -q[1] ** 2 - q[2] ** 2]]))
+
+
+# matrix form to quaternion
+def toQuaternion(R):
+    w = 1/2*np.sqrt(1+R[0,0]+R[1,1]+R[2,2])
+    x = 1/(4*w)*(R[2,1]-R[1,2])
+    y = 1/(4*w)*(R[0,2]-R[2,0])
+    z = 1/(4*w)*(R[1,0]-R[0,1])
+    # t = np.trace(R)
+    # r = np.sqrt(1 + t)
+    # w = r / 2
+    # x = np.sign(R[2, 1] - R[1, 2]) * np.sqrt(1 + R[0, 0] - R[1, 1] - R[2, 2]) / 2
+    # y = np.sign(R[0, 2] - R[2, 0]) * np.sqrt(1 - R[0, 0] + R[1, 1] - R[2, 2]) / 2
+    # z = np.sign(R[1, 0] - R[0, 1]) * np.sqrt(1 - R[0, 0] - R[1, 1] + R[2, 2]) / 2
+    return np.array([w, x, y, z])

@@ -28,7 +28,7 @@ R = I + \frac{2}{q^Tq}
     \begin{bmatrix}
         -q_2^2-q_3^2 & q_1q_2-q_3q_0 & q_1q_3+q_2q_0 \\
         q_1q_2+q_3q_0 & -q_1^2-q_3^2 & q_2q_3-q_1q_0 \\
-        q_1q_3-q_2q_0 & q_2q_3+q_1q_0 & -q_1^1-q_2^2
+        q_1q_3-q_2q_0 & q_2q_3+q_1q_0 & -q_1^2-q_2^2
     \end{bmatrix}
 \end{gather}
 where $q$ is the quaternion using the typical $i$, $j$, $k$ basis. 
@@ -49,3 +49,36 @@ q' = \frac{1}{2}
     \end{bmatrix}
     q
 $$
+where $\omega$ has been broken into components.
+
+Using this we have a fairly straightforward change in the integration steps except we have to do rotations and translations separately rather than unified in $g$. The change to quaternions changes how $g$ is stored and accessed in the code and we will need a transformation from quaternion form to matrix form.
+
+Adding to utils:
+```python
+# quaternion form to matrix form
+def toMatrix(q):
+    return np.eye(3) + 2 / (q @ q) * (np.array(
+        [[-q[2] ** 2 - q[3] ** 2, q[1] * q[2] - q[3] * q[0], q[1] * q[3] + q[2] * q[0]],
+         [q[1] * q[2] + q[3] * q[0], -q[1] ** 2 - q[3] ** 2, q[2] * q[3] - q[1] * q[0]],
+         [q[1] * q[3] - q[2] * q[0], q[2] * q[3] + q[1] * q[0], -q[1] ** 2 - q[2] ** 2]]))
+```
+
+Also it will be useful to convert from rotations to quaternions in the initialization of the rod and we will have:
+```python
+# matrix form to quaternion
+def toQuaternion(R):
+    t = np.trace(R)
+    r = np.sqrt(1 + t)
+    w = r / 2
+    x = np.sign(R[2, 1] - R[1, 2]) * np.sqrt(1 + R[0, 0] - R[1, 1] - R[2, 2]) / 2
+    y = np.sign(R[0, 2] - R[2, 0]) * np.sqrt(1 - R[0, 0] + R[1, 1] - R[2, 2]) / 2
+    z = np.sign(R[1, 0] - R[0, 1]) * np.sqrt(1 - R[0, 0] - R[1, 1] + R[2, 2]) / 2
+    return np.array([w, x, y, z])
+```
+
+For ease we can modify the `flatten` and `unflatten` functions to work with the new representation and keep the same structure.
+
+Now we can change $g$ to be storing the quaternion form and the position rather than a flattened representation of itself.
+
+The resulting changes are incorporated into the stepping and should give the same results just a bit more efficiently.
+ 

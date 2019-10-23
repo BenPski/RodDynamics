@@ -52,6 +52,10 @@ Looks at implementing simulations for boundary conditions other than cantilevere
 
 Looks to generalize the material and geometric properties of a rod. Implements a general interface for arbitrary geometries and materials and shows simple ones.
 
+## Quaternions
+
+Switches the rotation representation to quaternions to avoid the the matrix exponential to improve computation speed.
+
 # Example
 
 Goes through an example for the simulation.
