@@ -63,10 +63,4 @@ def toQuaternion(R):
     x = 1/(4*w)*(R[2,1]-R[1,2])
     y = 1/(4*w)*(R[0,2]-R[2,0])
     z = 1/(4*w)*(R[1,0]-R[0,1])
-    # t = np.trace(R)
-    # r = np.sqrt(1 + t)
-    # w = r / 2
-    # x = np.sign(R[2, 1] - R[1, 2]) * np.sqrt(1 + R[0, 0] - R[1, 1] - R[2, 2]) / 2
-    # y = np.sign(R[0, 2] - R[2, 0]) * np.sqrt(1 - R[0, 0] + R[1, 1] - R[2, 2]) / 2
-    # z = np.sign(R[1, 0] - R[0, 1]) * np.sqrt(1 - R[0, 0] - R[1, 1] + R[2, 2]) / 2
     return np.array([w, x, y, z])

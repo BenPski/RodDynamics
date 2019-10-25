@@ -223,12 +223,10 @@ class Rod():
             p = g_half[:3, 3]
             p = p + self.ds * R @ xi_half[3:]
             q = toQuaternion(R)
-            q = q + self.ds/2 * np.array(
+            q = q + self.ds / 2 * np.array(
                 [[0, -xi_half[0], -xi_half[1], -xi_half[2]], [xi_half[0], 0, xi_half[2], -xi_half[1]],
                  [xi_half[1], -xi_half[2], 0, xi_half[0]], [xi_half[2], xi_half[1], -xi_half[0], 0]]) @ q
-            # R = toMatrix(q)
             g_half = unflatten(np.concatenate([q, p]))
-            # g_half = g_half @ expm(se(self.ds * xi_half))
 
             # determine next step from half step value
             self.xi[i + 1, :] = 2 * xi_half_next - prev.xi[i + 1, :]
@@ -236,14 +234,14 @@ class Rod():
 
         # midpoint RKMK to step the g values
         for i in range(self.N):
-            eta_half = (self.eta[i,:] + prev.eta[i,:])/2
-            q = prev.g[i,:4]
-            p = prev.g[i,4:]
-            p = p + dt* toMatrix(q) @ eta_half[3:]
-            q = q + dt/2*np.array(
+            eta_half = (self.eta[i, :] + prev.eta[i, :]) / 2
+            q = prev.g[i, :4]
+            p = prev.g[i, 4:]
+            q = q + dt / 2 * np.array(
                 [[0, -eta_half[0], -eta_half[1], -eta_half[2]], [eta_half[0], 0, eta_half[2], -eta_half[1]],
                  [eta_half[1], -eta_half[2], 0, eta_half[0]], [eta_half[2], eta_half[1], -eta_half[0], 0]]) @ q
-            self.g[i, :] = np.concatenate([q,p])
+            p = p + dt * toMatrix((q + prev.g[i, :4]) / 2) @ eta_half[3:]
+            self.g[i, :] = np.concatenate([q, p])
 
         return g_half
 

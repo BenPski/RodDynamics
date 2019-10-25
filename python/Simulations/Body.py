@@ -137,7 +137,7 @@ class SimpleBody(Body):
         return np.diag([E * Ix, E * Iy, G * J, G * A, G * A, E * A])
 
     def grav_data(self, s):
-        return self.geometry.A(s)*self.material.rho
+        return self.geometry.A(s) * self.material.rho
 
 
 class FirstOrderMaterial():
