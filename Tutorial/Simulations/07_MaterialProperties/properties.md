@@ -66,7 +66,7 @@ $$
 where $C_{ij}$ and $D_k$ are material constants determined empirically and $I_1$, $I_2$, and $J$ are invariants of $F^TF$ where $F$ is the deformation gradient. Also we assume $C_{00} = 0$ because the energy should be 0 with no deformation. In this case invariants means independent of coordinate rotations. Using the previously defined $F$ we get that the invariants are:
 
 \begin{gather}
-I_1 = (\nu_y + \omega_zr_xx)^2 + (\nu_x - \omega_zr_y)^2 + (\nu_z - \omega_yr_x + \omega_xr_y + 1)^2 + 2\\
+I_1 = (\nu_y + \omega_zr_x)^2 + (\nu_x - \omega_zr_y)^2 + (\nu_z - \omega_yr_x + \omega_xr_y + 1)^2 + 2\\
 I_2 = (\nu_y + \omega_zr_x)^2 + (\nu_x - \omega_zr_y)^2 + 2(\nu_z - \omega_yr_x + \omega_xr_y + 1)^2 + 1\\
 J = \nu_z - \omega_yr_x + \omega_xr_y + 1\\
 \end{gather}
